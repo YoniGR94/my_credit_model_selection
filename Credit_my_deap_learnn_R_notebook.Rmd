@@ -3,6 +3,9 @@ title: "R Notebook"
 output: html_document
 ---
 
+
+how good can we predict Credit balance?
+
 In order to race our models, we will use the Credit data from ILSR package.
 
 About this data:
@@ -48,33 +51,40 @@ library(randomForest)
 #other models
 library(glmnet)
 ```
-now we will se the data's structure
+
+now we will see the data's structure
 
 ```{r see data, warning=FALSE, message=FALSE}
-#kable(head(Credit[,-1],6))
 head(Credit[,-1],6) %>%
   kbl() %>%
   kable_material(c("striped", "hover"))
-
-{plot(hist(Credit$Balance), col= alpha("green", 0.7), xlab = "Balance in $10,000's" )
-  abline(v= mean(Credit$Balance), col= "blue",lty= "dashed")
-  grid()}
+```
 
 
-Credit%>%
+```{r, error=FALSE, message=FALSE, warning=FALSE}
+Credit %>%
+  ggplot(aes(x=Balance))+
+  geom_histogram(color= alpha("black", 0.7),fill= "green" )+
+  geom_vline(xintercept= mean(Balance), color= "blue",lty= "dashed")+
+  theme_linedraw()+labs( x= "Balance in $10,000")
+```
+As we can see, $Balance$ is not normal, due to a dense $0$ value
+
+```{r, error=FALSE, message=FALSE, warning=FALSE}
+Credit %>%
   ggplot(aes(y=Balance, x=Age, ))+
   geom_point(y=Balance, x=Age, size= 0.7)+#,fill= Ethnicity)
   geom_smooth(method = "glm")+ylim(min(Balance), max(Balance))
 
-#{
-boxplot(Balance~ Ethnicity,data= Credit, col= c("yellow", "blue", "green"))
-#lines(dotplot(Balance~ Ethnicity,data= Credit, col= c("yellow", "blue", "green")))}
+Credit %>%
+  ggplot(aes(y=Balance, x=Ethnicity,fill= Ethnicity))+
+  geom_boxplot(size= 0.7)+labs(x = "")
 
-  
 ```
+
 we will ad some variables
 
-```{r mutate}
+```{r mutate, error=FALSE, message=FALSE, warning=FALSE}
 #set data to Train & Test
 Credit <- na.omit(Credit)
 n <- nrow(Credit)
@@ -122,7 +132,7 @@ $(Y|X) \sim N(BX,\epsilon)$, like LM.
 
 but this time we use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
 
-$RSS+ \lambda {\Sigma}_{j=1}^p |\beta_j|$
+$RSS+ \lambda {\Si3gma}_{j=1}^p |\beta_j|$
 
 when $p=length( \beta)$ and $\lambda$ is a hyper parameter.
 
@@ -204,7 +214,7 @@ Using the net:
 
 ```{r apply Keras, echo=TRUE, results='hide'}
 mod_Credit <- modnn %>% fit(
-  x[-testid , ], y[-testid], epochs = 500, batch_size = 32,
+  x[-testid , ], y[-testid], epochs = 1500, batch_size = 32,
   validation_data = list(x[testid , ], y[testid ])
 )
 ```

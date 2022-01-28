@@ -1,6 +1,8 @@
 Different Techniches to Analyze Credit Balance
 ================
 
+how good can we predict Credit balance?
+
 In order to race our models, we will use the Credit data from ILSR
 package.
 
@@ -49,10 +51,9 @@ library(randomForest)
 library(glmnet)
 ```
 
-now we will se the data’s structure
+now we will see the data’s structure
 
 ``` r
-#kable(head(Credit[,-1],6))
 head(Credit[,-1],6) %>%
   kbl() %>%
   kable_material(c("striped", "hover"))
@@ -311,32 +312,33 @@ Caucasian
 </table>
 
 ``` r
-{plot(hist(Credit$Balance), col= alpha("green", 0.7), xlab = "Balance in $10,000's" )
-  abline(v= mean(Credit$Balance), col= "blue",lty= "dashed")
-  grid()}
+Credit %>%
+  ggplot(aes(x=Balance))+
+  geom_histogram(color= alpha("black", 0.7),fill= "green" )+
+  geom_vline(xintercept= mean(Balance), color= "blue",lty= "dashed")+
+  theme_linedraw()+labs( x= "Balance in $10,000")
 ```
 
-![](Credit_my_deap_learnn_markdown_files/figure-gfm/see%20data-1.png)<!-- -->![](Credit_my_deap_learnn_markdown_files/figure-gfm/see%20data-2.png)<!-- -->
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+As we can see, *B**a**l**a**n**c**e* is not normal, due to a dense 0
+value
 
 ``` r
-Credit%>%
+Credit %>%
   ggplot(aes(y=Balance, x=Age, ))+
   geom_point(y=Balance, x=Age, size= 0.7)+#,fill= Ethnicity)
   geom_smooth(method = "glm")+ylim(min(Balance), max(Balance))
 ```
 
-![](Credit_my_deap_learnn_markdown_files/figure-gfm/see%20data-3.png)<!-- -->
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 ``` r
-#{
-boxplot(Balance~ Ethnicity,data= Credit, col= c("yellow", "blue", "green"))
+Credit %>%
+  ggplot(aes(y=Balance, x=Ethnicity,fill= Ethnicity))+
+  geom_boxplot(size= 0.7)+labs(x = "")
 ```
 
-![](Credit_my_deap_learnn_markdown_files/figure-gfm/see%20data-4.png)<!-- -->
-
-``` r
-#lines(dotplot(Balance~ Ethnicity,data= Credit, col= c("yellow", "blue", "green")))}
-```
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
 
 we will ad some variables
 
@@ -438,7 +440,7 @@ assumption
 but this time we use shrinkage method in order to reduce variance & over
 fitting. so our minimizing function define as
 
-*R**S**S* + *λ**Σ*<sub>*j* = 1</sub><sup>*p*</sup>\|*β*<sub>*j*</sub>\|
+$RSS+ \\lambda {\\Si3gma}\_{j=1}^p \|\\beta_j\|$
 
 when *p* = *l**e**n**g**t**h*(*β*) and *λ* is a hyper parameter.
 
@@ -557,7 +559,7 @@ Using the net:
 
 ``` r
 mod_Credit <- modnn %>% fit(
-  x[-testid , ], y[-testid], epochs = 500, batch_size = 32,
+  x[-testid , ], y[-testid], epochs = 1500, batch_size = 32,
   validation_data = list(x[testid , ], y[testid ])
 )
 ```
@@ -593,7 +595,7 @@ err_nn<- y[testid] - nnpred
 mean(abs(err_nn))
 ```
 
-    ## [1] 28.74693
+    ## [1] 16.73089
 
 # sum result
 
@@ -612,8 +614,9 @@ colnames(my_pred)[1]<- "Predict"
 
 all_sd<- c(err_lm,err_cp,err_rf,err_adb,err_nn)
 #caption
-script<- paste("sd of models: ",modl_nam[1], "is", round(all_sd[1],3))
-for (i in 2:length(modl_nam)) {
+order_script<- order(modl_nam)
+script<- paste("sd of models: ",modl_nam[order_script[1]], "is", round(all_sd[order_script[1]],3))
+for (i in order_script[-1]) {
   script<- paste(script, ", ", modl_nam[i], "is", round(all_sd[i],3) )}
 
 my_pred %>%
