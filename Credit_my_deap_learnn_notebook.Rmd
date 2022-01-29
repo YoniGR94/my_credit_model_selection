@@ -1,4 +1,11 @@
 ---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+---
 title: "Different Techniches to Analyze Credit Balance"
 output: github_document
 always_allow_html: true
@@ -328,4 +335,4 @@ my_pred %>%
   labs(title = "Error Violin",caption = script)
 ```
 
-If the winner of the error in prediction is not that clear, our $H_0$ will be the regression, since it's prediction is the easiest to understand and present.
+If the winner of the error in prediction is not that clear, our $H_0$ will be the regression, since it's prediction is the easiest to understand and present. prediction is the easiest to understand and present.
