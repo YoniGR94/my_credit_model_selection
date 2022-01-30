@@ -14,7 +14,7 @@ About this data:
 The aim here is to predict which customers will default on their credit
 card debt.”\*
 
-\*[RDocumentation](https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Credit)
+<font size="2">\*[RDocumentation](https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Credit)</font>
 
 # prologue
 
@@ -33,9 +33,7 @@ attach(Credit)
 #random Forest
 library(randomForest)
 #other models
-library(glmnet)
-library(Rcmdr)
-library(MASS)
+libraries('glmnet','Rcmdr','MASS')
 #neural network
 libraries('tensorflow','keras')
 #install_tensorflow() #install_keras() #install_minicomda
@@ -309,26 +307,29 @@ Caucasian
 </tbody>
 </table>
 
-before we start to analyze, here a histogram of he credit balance:
+Here a histogram of he credit balance:
 
 ``` r
 Credit %>%
   ggplot(aes(x=Balance))+
   geom_histogram(color= alpha("black", 0.7),fill= alpha("green", 0.8) )+
   geom_vline(xintercept= mean(Balance), color= "red",lty= "dashed")+
-  theme_bw()+labs( x= "Balance in $10,000")
+  theme_bw()+labs(title = "Balance Histogram")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
 
 ![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
-As we can see, *B**a**l**a**n**c**e* is not normal, and has a left tail.
+As we can see, *B**a**l**a**n**c**e* is not normal, and has a right
+tail.
 
-what about race, does this factor alone predict the result? and age?
+trying to predict the Balance, one cal ask about race and/or gender
+bias. Does this factor alone predict the result? and age?
 
 ``` r
 Credit %>%
   ggplot(aes(y=Balance, x=Age,fill= factor(Ethnicity) ))+
   geom_point(size= 0.7)+
-  geom_smooth(method = "glm", level= 0.9)+ylim(min(Balance), max(1500))
+  geom_smooth(method = "glm", level= 0.9)+ylim(min(Balance), max(1500))+
+  labs(title = "Balance GLM by Age & Ethnicity")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
 
 ![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
@@ -347,8 +348,8 @@ and what if we will predict by race & gender?
 Credit %>%
   ggplot(aes(y=Balance,x= factor(Ethnicity),fill=factor(Gender) ))+
   geom_point(size= 0.7)+
-  geom_boxplot(size= 0.7)+
-  labs(x= "")
+  geom_boxplot(size= 0.7)+scale_fill_brewer(palette="Dark2")+
+  labs(x= "", title = "Balance by Gender & Ethnicity")+theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
 
 ![](Credit_my_deap_learnn_markdown_files/figure-gfm/plot%20age%20race-1.png)<!-- -->
@@ -379,16 +380,15 @@ Credit<- Credit[,-1] %>%
   mutate(Bride= (Gender== 'Female')&(Married== 'Yes'))
 ```
 
-Finaly, we can predict with our models
+Finally, we can predict with our models
 
 # Models
 
 ## Linear
 
-### LM
+### Classic LM
 
-assumption
-
+Assumption: knowing X matrix, Y distributed normal:
 (*Y*\|*X*) ∼ *N*(*B**X*,*σ*<sup>2</sup>)
 
 ``` r
@@ -405,11 +405,10 @@ over fitting?
 
 ### step wise method
 
-Adding each time variable acording to AIC method.
+Adding each time variable according to AIC method.
 
 ``` r
-null_model <- lm(Balance ~1, data =  Credit[-testid , ])
-# Stepwise regression model
+null_model <- lm(Balance ~1, data =  Credit[-testid , ]) #null model for starting Stepwise
 step_fit <- stepAIC (null_model,k= 2, direction = "forward",scope = list(lower= formula(null_model),upper= formula(lmfit) ) )
 ```
 
@@ -917,32 +916,28 @@ log-Likelihood
 
 ### lasso
 
-\*(use vectors)
+Assumption
 
-assumption
+(*Y*\|*X*) ∼ *N*(*B**X*,*σ*<sup>2</sup>), like LM.
 
-(*Y*\|*X*) ∼ *N*(*B**X*,*ϵ*), like LM.
-
-but this time we use shrinkage method in order to reduce variance & over
+But this time we use shrinkage method in order to reduce variance & over
 fitting. so our minimizing function define as
 
-$RSS+ \\lambda {\\Si3gma}\_{j=1}^p \|\\beta_j\|$
+*R**S**S* + *λ**Σ*<sub>*j* = 1</sub><sup>*p*</sup>\|*β*<sub>*j*</sub>\|
 
 when *p* = *l**e**n**g**t**h*(*β*) and *λ* is a hyper parameter.
 
 ``` r
 x <- scale(model.matrix(Balance ~ . - 1, data = Credit))
 y <- Credit$Balance
-
 #glmnet
-cvfit <- cv.glmnet(x[-testid , ], y[-testid],
-                     type.measure = "mae")
+cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 ```
 
 this time, we need to set our hipper parameter, *λ* that lead to the
-minimum mean cross-validated error
+minimum mean cross-validated error\*
 
-<font size="3"> [see
+<font size="2"> [\*see
 also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf)
 </font>
 
@@ -963,7 +958,7 @@ the error function.
 
 Mathematicaly, the tree assume a model of form
 
-$f(x)= ^M\_{m=1)\*I(x R_m)} $
+$f(x)= ^M\_{m=1} c_m\*I(x R_m) $
 
 while *M* is the numbers of groups, R_m is the specific group &
 *c*<sub>*m*</sub> is the parameter of the model.
@@ -1023,7 +1018,7 @@ modnn <- keras_model_sequential () %>%
               input_shape = ncol(x)) %>%
   layer_dropout(rate = 0.4) %>%
   layer_dense(units = 20, activation = 'relu') %>%
-  #layer_dropout(rate = 0.3) %>%
+  layer_dropout(rate = 0.2) %>%
   layer_dense(units = 1)
 ```
 
@@ -1044,9 +1039,11 @@ modnn
     ## ================================================================================
     ##  dense_2 (Dense)                    (None, 50)                      800         
     ##                                                                                 
-    ##  dropout (Dropout)                  (None, 50)                      0           
+    ##  dropout_1 (Dropout)                (None, 50)                      0           
     ##                                                                                 
     ##  dense_1 (Dense)                    (None, 20)                      1020        
+    ##                                                                                 
+    ##  dropout (Dropout)                  (None, 20)                      0           
     ##                                                                                 
     ##  dense (Dense)                      (None, 1)                       21          
     ##                                                                                 
@@ -1096,7 +1093,7 @@ err_nn<- abs(y[testid] - nnpred)
 mean(abs(err_nn))
 ```
 
-    ## [1] 521.6214
+    ## [1] 21.96334
 
 ## Sum all result
 
@@ -1139,7 +1136,30 @@ my_pred %>%
 ```
 
 ![](Credit_my_deap_learnn_markdown_files/figure-gfm/sum%20pred-1.png)<!-- -->
+# Discussion
 
-If the winner of the error in prediction is not that clear, our
-*H*<sub>0</sub> will be the regression, since it’s prediction is the
-easiest to understand and present.
+If the winner of the error in prediction were not that clear, our
+*H*<sub>0</sub> would will be the linear model, since it’s prediction is
+the easiest to understand and present.
+
+Amazingly, <b>the LM(var 82) did nothing compare to the NN(var 22)</b>,
+with only almost quarter of the linear’s error.
+
+At the same time, Lasso(var 81) did only slightly better then the liner,
+both better than the ADB(var 85).
+
+Another clear effect is this of the ADB comparing to the RF(var 101),
+which had the worse prediction variance. The effect if weights is the
+main advantage of ADB over RF.
+
+To sum it up, though rerunning of this script might create a different
+result, this modeling comparing to data frame prediction show us how
+<b>using weights or regulation in models can get better models comparing
+to the same model. In contrast, some time different models create worse
+prediction than the unregulated ones</b>, like RF and LM. The most
+complex model, NN, overcome all models, and known to have huge
+potential, as long as understanding the effect of each variable is not
+needed.
+
+<b>In my opinion, the best models to predict with here are the Lasso and
+the Neural network.</b>

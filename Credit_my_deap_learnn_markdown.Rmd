@@ -14,7 +14,7 @@ About this data:
 
 "A simulated data set containing information on ten thousand customers. The aim here is to predict which customers will default on their credit card debt."* 
 
- <font size="2"> *[RDocumentation](https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Credit)</font>
+<font size="2">*[RDocumentation](https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Credit)</font>
 
 # prologue
 
@@ -33,9 +33,7 @@ attach(Credit)
 #random Forest
 library(randomForest)
 #other models
-library(glmnet)
-library(Rcmdr)
-library(MASS)
+libraries('glmnet','Rcmdr','MASS')
 #neural network
 libraries('tensorflow','keras')
 #install_tensorflow() #install_keras() #install_minicomda
@@ -61,24 +59,27 @@ head(Credit[,-1],6) %>%
   kable_material(c("striped", "hover"))
 ```
 
-before we start to analyze, here a histogram of he credit balance:
+Here a histogram of he credit balance:
 
 ```{r, error=FALSE, message=FALSE, warning=FALSE ,cache=FALSE}
 Credit %>%
   ggplot(aes(x=Balance))+
   geom_histogram(color= alpha("black", 0.7),fill= alpha("green", 0.8) )+
   geom_vline(xintercept= mean(Balance), color= "red",lty= "dashed")+
-  theme_bw()+labs( x= "Balance in $10,000")
-```
-As we can see, $Balance$ is not normal, and has a left tail.
+  theme_bw()+labs(title = "Balance Histogram")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 
-what about race, does this factor alone predict the result? and age?
+```
+As we can see, $Balance$ is not normal, and has a right tail.
+
+trying to predict the Balance, one cal ask about race and/or gender bias. Does this factor alone predict the result? and age?
 
 ```{r, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
 Credit %>%
   ggplot(aes(y=Balance, x=Age,fill= factor(Ethnicity) ))+
   geom_point(size= 0.7)+
-  geom_smooth(method = "glm", level= 0.9)+ylim(min(Balance), max(1500))
+  geom_smooth(method = "glm", level= 0.9)+ylim(min(Balance), max(1500))+
+  labs(title = "Balance GLM by Age & Ethnicity")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
+
 
 Credit %>%
   ggplot(aes(y=Balance, x=Ethnicity,fill= Ethnicity))+
@@ -91,8 +92,8 @@ and what if we will predict by race & gender?
 Credit %>%
   ggplot(aes(y=Balance,x= factor(Ethnicity),fill=factor(Gender) ))+
   geom_point(size= 0.7)+
-  geom_boxplot(size= 0.7)+
-  labs(x= "")
+  geom_boxplot(size= 0.7)+scale_fill_brewer(palette="Dark2")+
+  labs(x= "", title = "Balance by Gender & Ethnicity")+theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
 Again, there is no clear effect.
 
@@ -121,16 +122,15 @@ Credit<- Credit[,-1] %>%
   mutate(Bride= (Gender== 'Female')&(Married== 'Yes'))
 ```
 
-Finaly, we can predict with our models
+Finally, we can predict with our models
 
 # Models
 
 ## Linear
 
-### LM
+### Classic LM
 
-assumption
-
+Assumption: knowing X matrix, Y distributed normal:
 $(Y|X) \sim N(BX,\sigma^2)$
 
 ```{r LM, warning= F,cache=FALSE}
@@ -144,17 +144,15 @@ Now, what is our best predictors, if we filter our variables and prevent over fi
 
 ### step wise method
 
-Adding each time variable acording to AIC method.
+Adding each time variable according to AIC method.
 
 ```{r step wise ,cache=FALSE}
-null_model <- lm(Balance ~1, data =  Credit[-testid , ])
-# Stepwise regression model
+null_model <- lm(Balance ~1, data =  Credit[-testid , ]) #null model for starting Stepwise
 step_fit <- stepAIC (null_model,k= 2, direction = "forward",scope = list(lower= formula(null_model),upper= formula(lmfit) ) )
 step_pred <- predict(step_fit , Credit[testid , ])
 err_step<- abs(Credit$Balance[testid] - step_pred)
 mean(abs(err_step))
 ```
-
 lets see the regression vs the step wise. it is clear that the AIC method choose only the variables with P-value < 5 %
 
 ```{r sum of reg}
@@ -163,13 +161,11 @@ tab_model(lmfit,step_fit, show.ci= F,show.se = T,show.loglik= T)
 
 ### lasso
 
-*(use vectors)
-
-assumption
+Assumption
 
 $(Y|X) \sim N(BX,\sigma^2)$, like LM.
 
-but this time we use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
+But this time we use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
 
 $RSS+ \lambda {\Sigma}_{j=1}^p |\beta_j|$
 
@@ -178,10 +174,8 @@ when $p=length( \beta)$ and $\lambda$ is a hyper parameter.
 ```{r Lasso}
 x <- scale(model.matrix(Balance ~ . - 1, data = Credit))
 y <- Credit$Balance
-
 #glmnet
-cvfit <- cv.glmnet(x[-testid , ], y[-testid],
-                     type.measure = "mae")
+cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 ```
 
 this time, we need to set our hipper parameter, $\lambda$ that lead to the minimum mean cross-validated error*
@@ -194,7 +188,6 @@ cpred <- predict(cvfit, x[testid , ], s = "lambda.min")
 err_cp<- abs(y[testid] - cpred)
 mean(abs(err_cp))
 ```
-
 ##  Trees
 
 The main algorithm in randomforest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
@@ -223,7 +216,7 @@ mean(abs(err_rf))
 ###  Adaboost
 
 A mean of n-tree with weights
-```{r adaboost, warning= F, cache=T}
+```{r adaboost, warning= F}
 norm_y<- 2*y/(max(y)+min(y))-1
 
 adb_s<-randomForest(formula= Balance ~ ., data = Credit[-testid , ],
@@ -234,7 +227,6 @@ pred_abs<- head(as.vector(pred_abs),133)
 err_adb<- abs(y[testid] - pred_abs)
 mean(abs(err_adb))
 ```
-
 ##  Neural Network
 
 Creating of network of nonlinear function and weights, that evaluate the prediction.
@@ -245,13 +237,13 @@ this method is the hardest to present due to the coplexativity of the net.
 
 we set our net using 2 layers of relu and then a dropout
 
-```{r keras set, warning=FALSE, cache=T}
+```{r keras set, warning=FALSE}
 modnn <- keras_model_sequential () %>%
   layer_dense(units = 50, activation = "relu",
               input_shape = ncol(x)) %>%
   layer_dropout(rate = 0.4) %>%
   layer_dense(units = 20, activation = 'relu') %>%
-  #layer_dropout(rate = 0.3) %>%
+  layer_dropout(rate = 0.2) %>%
   layer_dense(units = 1)
 
 modnn %>% compile(loss = "mse",
@@ -327,5 +319,17 @@ my_pred %>%
     axis.title = element_text(size = 8))+ ylab("Error")+
   labs(title = "Error Violin",caption = script)
 ```
+# Discussion
 
-If the winner of the error in prediction is not that clear, our $H_0$ will be the regression, since it's prediction is the easiest to understand and present.
+If the winner of the error in prediction were not that clear, our $H_0$ would will be the linear model, since it's prediction is the easiest to understand and present.
+
+Amazingly, <b>the LM(var 82) did nothing compare to the NN(var 22)</b>, with only almost quarter of the linear's error.
+
+At the same time, Lasso(var 81) did only slightly better then the liner, both better than the ADB(var 85).
+
+Another clear effect is this of the ADB comparing to the RF(var 101), which had the worse prediction variance. The effect if weights is the main advantage of ADB over RF.
+
+To sum it up, though rerunning of this script might create a different result, this modeling comparing to data frame prediction show us how <b>using weights or regulation in models can get better models comparing to the same model. In contrast, some time different models create worse prediction than the unregulated ones</b>, like RF and LM. The most complex model, NN, overcome all models,
+and known to have huge potential, as long as understanding the effect of each variable is not needed.
+
+<b>In my opinion, the best models to predict with here are the Lasso and the Neural network.</b>
