@@ -8,5 +8,6 @@ The data is Credit from ILSR package*
 This project will show which of the models are better: Those who are based on linear regression,
 or those who use randomness and deep learning are better.
 
-In addition, this is my own practice with a set of data from R and some packages, in order to use similar script for real predictions,
-that is more relevant for business decision or understanding of things.
+This was created for 2 main reasons
+1. An exercise on what I have learned of "data predictions using R"
+2. To be a base to future prediction work in the future
