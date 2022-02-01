@@ -305,13 +305,13 @@ One can ask, can all of the weak predictors(aka one variables) create a good one
 
 We will ad some variables.
 
-$High deg= T$$ if got more than 12 years of education
+ $High deg= T$$ if got more than 12 years of education
 
-$Age 2= Age^2$$ in order to allaw parabolic age effect
+ $Age 2= Age^2$$ in order to allaw parabolic age effect
 
-$Bride=$$ interaction of gender ans marriage
+ $Bride=$$ interaction of gender ans marriage
 
-Also, we will set seed and sample train & test of $$1/3$$
+Also, we will set seed and sample train & test of $$\frac{1}{3}$$
 
 
 Finally, we can predict with our models
@@ -324,7 +324,7 @@ Finally, we can predict with our models
 
 Assumption: knowing X matrix, Y distributed normal:
 
-$(Y|X) \sim N(BX,\sigma^2)$
+ $(Y|X) \sim N(BX,\sigma^2)$
 
 ```{r LM, warning= F,cache=FALSE}
 lmfit <- lm(Balance ~ ., data = Credit[-testid , ])
@@ -743,11 +743,11 @@ log-Likelihood
 
 Assumption
 
-$(Y|X) \sim N(BX,\sigma^2)$, like LM.
+ $(Y|X) \sim N(BX,\sigma^2)$, like LM.
 
 But this time we use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
 
-$$RSS+ \lambda {\Sigma}_{j=1}^p |\beta_j|$$
+ $$RSS+ \lambda {\Sigma}_{j=1}^p |\beta_j|$$
 
 when $p=length( \beta)$ and $$\lambda$$ is a hyper parameter.
 
@@ -769,7 +769,7 @@ with the minimal $$\lambda$$, we got sd of 81.0397
 The main algorithm in randomforest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
 
 Mathematicaly, the tree assume a model of form
-
+ 
 $f(x)= \sum^M_{m=1} c_m*I(x \in R_m)+ \epsilon$
 
 while $M$ is the numbers of groups, R_m is the specific group & $c_m$ is the parameter of the model.
