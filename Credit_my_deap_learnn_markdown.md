@@ -382,8 +382,6 @@ Credit<- Credit[,-1] %>%
 
 Finally, we can predict with our models
 
-![](https://latex.codecogs.com/svg.latex?\Large&space;t=\frac%7B-b\pm\sqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D)
-
 # Models
 
 ## Linear
@@ -936,7 +934,7 @@ y <- Credit$Balance
 cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 ```
 
-this time, we need to set our hipper parameter, *λ* that lead to the
+This time, we need to set our hipper parameter, *λ* that lead to the
 minimum mean cross-validated error\*
 
 <font size="2"> \*[see
@@ -960,12 +958,12 @@ the error function.
 
 Mathematically, the tree assume a model of form
 
-$f (x)= \\sum^M\_{m=1} c_m\*I(x \\in R_m) +\\epsilon$
+$f(x)= \\sum^M\_{m=1} c_m\*I(x \\in R_m) +\\epsilon$
 
 while *M* is the numbers of groups, *R*<sub>*m*</sub> is the specific
 group & *c*<sub>*m*</sub> is the parameter of the model.
 
-for a small tree,this is a very weak learner, but it can be used to
+For a small tree,this is a very weak learner, but it can be used to
 create deeper learning. A complicated tree can lead to over-feeting.
 
 ### Random Forest
