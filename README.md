@@ -12,8 +12,10 @@ This was created for 2 main reasons
 1. An exercise on what I have learned of "data predictions using R"
 2. To be a base to future prediction work in the future
 
-👓 see html presentation (recomended)- [RMarkdown html](https://github.com/YoniGR94/my_credit_model_selection/blob/main/Credit_my_deap_learnn_markdown.md)
+👓 minimal code presentation- [present me](https://github.com/YoniGR94/my_credit_model_selection/blob/main/presentme.md)
 
-👓 see code- [RMarkdown script](https://github.com/YoniGR94/my_credit_model_selection/blob/main/Credit_my_deap_learnn_markdown.Rmd)
+👓 Recomended- see html presentation- [RMarkdown](https://github.com/YoniGR94/my_credit_model_selection/blob/main/Credit_my_deap_learnn_markdown.md)
+
+👓 read code- [RMarkdown script](https://github.com/YoniGR94/my_credit_model_selection/blob/main/Credit_my_deap_learnn_markdown.Rmd)
 
 👓 copy plots and png- [figure gfm](https://github.com/YoniGR94/my_credit_model_selection/tree/main/Credit_my_deap_learnn_markdown_files/figure-gfm)
