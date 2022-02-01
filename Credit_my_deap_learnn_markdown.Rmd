@@ -124,8 +124,6 @@ Credit<- Credit[,-1] %>%
 
 Finally, we can predict with our models
 
-![\small ](https://latex.codecogs.com/svg.latex?\Large&space;t=\frac{-b\pm\sqrt{b^2-4ac}}{2a}) 
-
 # Models
 
 ## Linear
@@ -182,7 +180,7 @@ y <- Credit$Balance
 cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 ```
 
-this time, we need to set our hipper parameter, 
+This time, we need to set our hipper parameter, 
 $\lambda$
 that lead to the minimum mean cross-validated error*
 
@@ -200,11 +198,11 @@ The main algorithm in random forest, adaboost, etc is splitting the data each ti
 
 Mathematically, the tree assume a model of form
 
-$f (x)= \sum^M_{m=1} c_m*I(x \in R_m) +\epsilon$
+$f(x)= \sum^M_{m=1} c_m*I(x \in R_m) +\epsilon$
 
 while $M$ is the numbers of groups, $R_m$ is the specific group & $c_m$ is the parameter of the model.
 
-for a small tree,this is a very weak learner, but it can be used to create deeper learning. A complicated tree can lead to over-feeting.
+For a small tree,this is a very weak learner, but it can be used to create deeper learning. A complicated tree can lead to over-feeting.
 
 ###  Random Forest
 
