@@ -53,7 +53,7 @@ Now we will see the data's structure
 #knitr::opts_chunk$set(cache = TRUE)
 ```
 
-```{r see data, warning=FALSE, message=FALSE,cache=FALSE}
+```{r see data 6, warning=FALSE, message=FALSE,cache=FALSE}
 head(Credit[,-1],6) %>%
   kbl() %>%
   kable_material(c("striped", "hover"))
@@ -61,7 +61,7 @@ head(Credit[,-1],6) %>%
 
 Here a histogram of he credit balance:
 
-```{r, error=FALSE, message=FALSE, warning=FALSE ,cache=FALSE}
+```{r histogram Balance, error=FALSE, message=FALSE, warning=FALSE ,cache=FALSE}
 Credit %>%
   ggplot(aes(x=Balance))+
   geom_histogram(color= alpha("black", 0.7),fill= alpha("green", 0.8) )+
@@ -73,7 +73,7 @@ As we can see, $Balance$ is not normal, and has a right tail.
 
 trying to predict the Balance, one cal ask about race and/or gender bias. Does this factor alone predict the result? and age?
 
-```{r, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
+```{r visual trend, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
 Credit %>%
   ggplot(aes(y=Balance, x=Age,fill= factor(Ethnicity) ))+
   geom_point(size= 0.7)+
@@ -180,7 +180,7 @@ cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 
 this time, we need to set our hipper parameter, $\lambda$ that lead to the minimum mean cross-validated error*
 
- <font size="2"> [*see also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf) </font> 
+ <font size="2"> *[see also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf) </font> 
  
 ```{r lambda.min}
 lambda.min<- cvfit$lambda.min
@@ -192,13 +192,13 @@ mean(abs(err_cp))
 
 The main algorithm in randomforest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
 
-Mathematicaly, the tree assume a model of form
+Mathematically, the tree assume a model of form
 
-$f(x)= \sum^M_{m=1} c_m*I(x \in R_m) $
+$f(x)= \sum^M_{m=1} c_m*I(x \in R_m) +\epsilon$
 
 while $M$ is the numbers of groups, R_m is the specific group & $c_m$ is the parameter of the model.
 
-for a small tree,This is a very weak learner, but it can be used to create deeper learning. too big tree can lead to over-feeting.
+for a small tree,this is a very weak learner, but it can be used to create deeper learning. A complicated tree can lead to over-feeting.
 
 ###  Random Forest
 
@@ -231,7 +231,7 @@ mean(abs(err_adb))
 
 Creating of network of nonlinear function and weights, that evaluate the prediction.
 
-this method is the hardest to present due to the coplexativity of the net.
+This method is the hardest to present due to the complexitivity of the net.
 
 ###  set seed
 
@@ -252,7 +252,6 @@ modnn %>% compile(loss = "mse",
                   )
 modnn
 ```
-
 
 Using the net:
 
@@ -333,3 +332,5 @@ To sum it up, though rerunning of this script might create a different result, t
 and known to have huge potential, as long as understanding the effect of each variable is not needed.
 
 <b>In my opinion, the best models to predict with here are the Lasso and the Neural network.</b>
+
+.

@@ -317,7 +317,7 @@ Credit %>%
   theme_bw()+labs(title = "Balance Histogram")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
 
-![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/histogram%20Balance-1.png)<!-- -->
 As we can see, *B**a**l**a**n**c**e* is not normal, and has a right
 tail.
 
@@ -332,7 +332,7 @@ Credit %>%
   labs(title = "Balance GLM by Age & Ethnicity")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
 
-![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/visual%20trend-1.png)<!-- -->
 
 ``` r
 Credit %>%
@@ -340,7 +340,7 @@ Credit %>%
   geom_boxplot(size= 0.7)+labs(x = "")
 ```
 
-![](Credit_my_deap_learnn_markdown_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/visual%20trend-2.png)<!-- -->
 
 and what if we will predict by race & gender?
 
@@ -937,7 +937,7 @@ cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 this time, we need to set our hipper parameter, *λ* that lead to the
 minimum mean cross-validated error\*
 
-<font size="2"> [\*see
+<font size="2"> \*[see
 also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf)
 </font>
 
@@ -956,15 +956,15 @@ The main algorithm in randomforest, adaboost, etc is splitting the data
 each time into two samples, in the most effective way by reevaluating
 the error function.
 
-Mathematicaly, the tree assume a model of form
+Mathematically, the tree assume a model of form
 
-$f(x)= ^M\_{m=1} c_m\*I(x R_m) $
+$f(x)= \\sum^M\_{m=1} c_m\*I(x \\in R_m) +\\epsilon$
 
 while *M* is the numbers of groups, R_m is the specific group &
 *c*<sub>*m*</sub> is the parameter of the model.
 
-for a small tree,This is a very weak learner, but it can be used to
-create deeper learning. too big tree can lead to over-feeting.
+for a small tree,this is a very weak learner, but it can be used to
+create deeper learning. A complicated tree can lead to over-feeting.
 
 ### Random Forest
 
@@ -1005,7 +1005,7 @@ mean(abs(err_adb))
 Creating of network of nonlinear function and weights, that evaluate the
 prediction.
 
-this method is the hardest to present due to the coplexativity of the
+This method is the hardest to present due to the complexitivity of the
 net.
 
 ### set seed
@@ -1163,3 +1163,5 @@ needed.
 
 <b>In my opinion, the best models to predict with here are the Lasso and
 the Neural network.</b>
+
+.
