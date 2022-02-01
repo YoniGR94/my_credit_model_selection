@@ -382,6 +382,8 @@ Credit<- Credit[,-1] %>%
 
 Finally, we can predict with our models
 
+![](https://latex.codecogs.com/svg.latex?\Large&space;t=\frac%7B-b\pm\sqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D)
+
 # Models
 
 ## Linear
@@ -918,7 +920,7 @@ log-Likelihood
 
 Assumption
 
-(*Y*\|*X*) ∼ *N*(*B**X*,*σ*<sup>2</sup>), like LM.
+(*Y*\|*X*) ∼ *N*(*B**X*,*σ*<sup>2</sup>) , like LM.
 
 But this time we use shrinkage method in order to reduce variance & over
 fitting. so our minimizing function define as
@@ -952,16 +954,16 @@ mean(abs(err_cp))
 
 ## Trees
 
-The main algorithm in randomforest, adaboost, etc is splitting the data
+The main algorithm in random forest, adaboost, etc is splitting the data
 each time into two samples, in the most effective way by reevaluating
 the error function.
 
 Mathematically, the tree assume a model of form
 
-$f(x)= \\sum^M\_{m=1} c_m\*I(x \\in R_m) +\\epsilon$
+$f (x)= \\sum^M\_{m=1} c_m\*I(x \\in R_m) +\\epsilon$
 
-while *M* is the numbers of groups, R_m is the specific group &
-*c*<sub>*m*</sub> is the parameter of the model.
+while *M* is the numbers of groups, *R*<sub>*m*</sub> is the specific
+group & *c*<sub>*m*</sub> is the parameter of the model.
 
 for a small tree,this is a very weak learner, but it can be used to
 create deeper learning. A complicated tree can lead to over-feeting.
@@ -1101,7 +1103,7 @@ We used the same seed to test all methods, so now we can compare the
 error of each data.
 
 -   Each time this scipt were running, we got different result, due to
-    randomness of *t**e**s**t**i**d*, and of the deep learning models
+    randomness of *t**e**s**t**i**d* , and of the deep learning models
 
 ``` r
 my_pred<- data.frame(c(lmpred,cpred,rf_pred,pred_abs,nnpred)) #pred data frame

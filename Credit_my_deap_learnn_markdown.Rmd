@@ -124,6 +124,8 @@ Credit<- Credit[,-1] %>%
 
 Finally, we can predict with our models
 
+![\small ](https://latex.codecogs.com/svg.latex?\Large&space;t=\frac{-b\pm\sqrt{b^2-4ac}}{2a}) 
+
 # Models
 
 ## Linear
@@ -163,13 +165,15 @@ tab_model(lmfit,step_fit, show.ci= F,show.se = T,show.loglik= T)
 
 Assumption
 
-$(Y|X) \sim N(BX,\sigma^2)$, like LM.
+$(Y|X) \sim N(BX,\sigma^2)$ , like LM.
 
 But this time we use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
 
 $RSS+ \lambda {\Sigma}_{j=1}^p |\beta_j|$
 
-when $p=length( \beta)$ and $\lambda$ is a hyper parameter.
+when 
+$p=length( \beta)$ and $\lambda$
+is a hyper parameter.
 
 ```{r Lasso}
 x <- scale(model.matrix(Balance ~ . - 1, data = Credit))
@@ -178,7 +182,9 @@ y <- Credit$Balance
 cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 ```
 
-this time, we need to set our hipper parameter, $\lambda$ that lead to the minimum mean cross-validated error*
+this time, we need to set our hipper parameter, 
+$\lambda$
+that lead to the minimum mean cross-validated error*
 
  <font size="2"> *[see also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf) </font> 
  
@@ -190,13 +196,13 @@ mean(abs(err_cp))
 ```
 ##  Trees
 
-The main algorithm in randomforest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
+The main algorithm in random forest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
 
 Mathematically, the tree assume a model of form
 
-$f(x)= \sum^M_{m=1} c_m*I(x \in R_m) +\epsilon$
+$f (x)= \sum^M_{m=1} c_m*I(x \in R_m) +\epsilon$
 
-while $M$ is the numbers of groups, R_m is the specific group & $c_m$ is the parameter of the model.
+while $M$ is the numbers of groups, $R_m$ is the specific group & $c_m$ is the parameter of the model.
 
 for a small tree,this is a very weak learner, but it can be used to create deeper learning. A complicated tree can lead to over-feeting.
 
@@ -285,7 +291,7 @@ mean(abs(err_nn))
 
 We used the same seed to test all methods, so now we can compare the error of each data.
 
-* Each time this scipt were running, we got different result, due to randomness of $testid$, and of the deep learning models
+* Each time this scipt were running, we got different result, due to randomness of $testid$ , and of the deep learning models
 
 ```{r sum pred, echo=TRUE, cache=T}
 my_pred<- data.frame(c(lmpred,cpred,rf_pred,pred_abs,nnpred)) #pred data frame
