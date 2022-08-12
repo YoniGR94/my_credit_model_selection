@@ -26,7 +26,7 @@ libraries:
 
 ```{r library, error=FALSE, message=FALSE, warning=FALSE}
 library(easypackages)
-
+library(tidymodels)
 #collect data:
 library(ISLR)
 attach(Credit)
@@ -41,7 +41,7 @@ libraries('tensorflow','keras')
 libraries('dplyr','tidyr')
 libraries('Matrix','scales')
 #visual
-libraries('ggplot2', 'hrbrthemes','viridis')
+libraries('hrbrthemes','viridis')
 libraries('knitr','kableExtra','sjPlot')
 ```
 
