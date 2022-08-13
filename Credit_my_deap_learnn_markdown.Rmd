@@ -261,10 +261,10 @@ rf_pred <- predict(rf_fit, new_data = dolche_credit_test)
 delta_rf<- rf_pred-dolche_credit_test$Balance
 delta_rf %>% abs() %>% unlist() %>% mean(na.rm= T)
 
-#cbind(rf_pred,dolche_credit_test$Balance) %>%
-#  rename(pred= 1, true= 2) %>% 
-#  ggplot(aes(y=pred, x= true))+
-#  geom_point()+geom_smooth()
+cbind(rf_pred,dolche_credit_test$Balance) %>%
+  rename(pred= 1, true= 2) %>% 
+  ggplot(aes(y=pred, x= true))+
+  geom_point()+geom_smooth()
 ```
 
 ```{r old random,eval=FALSE}
@@ -323,6 +323,11 @@ This method is the hardest to present due to the complexitivity of the net.
 we set our net using 2 layers of relu and then a dropout
 
 ```{r keras set, warning=FALSE}
+x <- model.matrix(Balance ~ . - 1, data = dolche_credit_train)
+x_test<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
+y <- dolche_credit_train$Balance
+y_test<- dolche_credit_test$Balance
+
 modnn <- keras_model_sequential () %>%
   layer_dense(units = 50, activation = "relu",
               input_shape = ncol(x)) %>%
@@ -341,13 +346,10 @@ modnn
 Using the net:
 
 ```{r apply Keras, echo=TRUE, results='hide', cache=TRUE}
-x <- model.matrix(Balance ~ . - 1, data = dolche_credit_train)
-x_test<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
-y <- dolche_credit_train$Balance
-y_test<- dolche_credit_test$Balance
+
 
 mod_Credit <- modnn %>% fit(
-  x, y, epochs = 200, batch_size = 32,
+  x, y, epochs = 1000, batch_size = 32,
   validation_data = list(x_test, y_test))
 
 ```
@@ -355,7 +357,6 @@ mod_Credit <- modnn %>% fit(
 ### Keras result
 
 ```{r Keras result, cache=T}
-#show Keras result
 summary(mod_Credit)
 
 plot(mod_Credit)+theme_gray()+
@@ -412,6 +413,8 @@ my_pred %>%
   labs(title = "Error Violin",caption = script)
 
 ```
+
+
 # Discussion
 
 If the winner of the error in prediction were not that clear, our $H_0$ would will be the linear model, since it's prediction is the easiest to understand and present.
