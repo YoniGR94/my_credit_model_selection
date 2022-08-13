@@ -27,6 +27,7 @@ libraries:
 ```{r library, error=FALSE, message=FALSE, warning=FALSE}
 library(easypackages)
 library(tidymodels)
+library(tidyverse)
 #collect data:
 library(ISLR)
 attach(Credit)
@@ -64,10 +65,9 @@ Here a histogram of he credit balance:
 ```{r histogram Balance, error=FALSE, message=FALSE, warning=FALSE ,cache=FALSE}
 Credit %>%
   ggplot(aes(x=Balance))+
-  geom_histogram(color= alpha("black", 0.7),fill= alpha("green", 0.8) )+
+  geom_histogram(color= alpha("black", 0.7),fill= alpha("darkgreen", 0.8) )+
   geom_vline(xintercept= mean(Balance), color= "red",lty= "dashed")+
   theme_bw()+labs(title = "Balance Histogram")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
-
 ```
 As we can see, $Balance$ is not normal, and has a right tail.
 
@@ -77,7 +77,7 @@ trying to predict the Balance, one cal ask about race and/or gender bias. Does t
 Credit %>%
   ggplot(aes(y=Balance, x=Age,fill= factor(Ethnicity) ))+
   geom_point(size= 0.7)+
-  geom_smooth(method = "glm", level= 0.9)+ylim(min(Balance), max(1500))+
+  geom_smooth(method = "glm", level= 0.9, color= "black")+ylim(min(Balance), max(1500))+
   labs(title = "Balance GLM by Age & Ethnicity")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 
 
@@ -110,16 +110,30 @@ We will ad some variables.
 also, we will set seed and sample train & test.
 
 ```{r mutate, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
-Credit <- na.omit(Credit)
-n <- nrow(Credit)
-set.seed (13)
-ntest <- trunc(n / 3)
-testid <- sample (1:n, ntest)
+Credit<- Credit%>%
+  mutate(High_deg= Education>=13,
+  Age_2= Age^2,
+  Bride= (Gender== 'Female')&(Married== 'Yes'))
+```
 
-Credit<- Credit[,-1] %>%
-  mutate(High_deg= Education>=13)%>% 
-  mutate(Age_2= Age^2)%>%
-  mutate(Bride= (Gender== 'Female')&(Married== 'Yes'))
+
+```{r recipe data}
+credit_split<- initial_split(Credit, prop = 0.8)
+credit_train_split<- training(credit_split)
+credit_test_split<-  testing(credit_split)
+
+dolche_de_leche<- function(df) {
+  recipe(data=  df, Balance~.) %>% 
+  update_role(Balance, new_role = "outcome") %>%
+  step_novel    (all_nominal(), -all_outcomes(),  new_level = "the_rest")%>% 
+  step_unknown  (all_nominal(), -all_outcomes(),  new_level= "step_unknown" )%>%
+  step_other    (all_nominal(), -all_outcomes(), other = 'step_other', threshold = 10)%>%
+  step_nzv      (all_numeric(), -all_outcomes(),freq_cut = 99/1) %>% 
+  step_normalize(all_numeric(), -all_outcomes())
+  }
+
+dolche_credit_train<-credit_train_split%>% dolche_de_leche()%>% prep(credit_train_split)%>% bake(credit_train_split) 
+dolche_credit_test<- credit_train_split%>% dolche_de_leche()%>% prep(credit_train_split)%>% bake(credit_test_split)
 ```
 
 Finally, we can predict with our models
@@ -133,11 +147,20 @@ Finally, we can predict with our models
 Assumption: knowing X matrix, Y distributed normal:
 $(Y|X) \sim N(BX,\sigma^2)$
 
-```{r LM, warning= F,cache=FALSE}
-lmfit <- lm(Balance ~ ., data = Credit[-testid , ])
-lmpred <- predict(lmfit , Credit[testid , ])
-err_lm<- abs(Credit$Balance[testid] - lmpred)
-mean(err_lm)
+```{r LM, warning= F}
+lm_par <- linear_reg() %>% set_mode('regression') %>% 
+  set_engine("lm")
+lm_fit <- lm_par %>% fit(Balance ~ . , dolche_credit_train)
+lm_pred<- predict(lm_fit, new_data = dolche_credit_test)
+# abs(Credit$Balance[testid] - lmpred)
+
+delta_lm<- lm_pred-dolche_credit_test$Balance
+delta_lm %>% abs() %>% unlist() %>% mean(na.rm= T)
+
+cbind(lm_pred,dolche_credit_test$Balance) %>%
+  rename(pred= 1, true= 2) %>% 
+  ggplot(aes(y=pred, x= true))+
+  geom_point()+geom_smooth()
 ```
 
 Now, what is our best predictors, if we filter our variables and prevent over fitting?
@@ -147,10 +170,12 @@ Now, what is our best predictors, if we filter our variables and prevent over fi
 Adding each time variable according to AIC method.
 
 ```{r step wise ,cache=FALSE}
-null_model <- lm(Balance ~1, data =  Credit[-testid , ]) #null model for starting Stepwise
+lmfit <- lm(Balance ~ ., data = credit_train_split)
+
+null_model <- lm(Balance ~1, data =  credit_train_split) #null model for starting Stepwise
 step_fit <- stepAIC (null_model,k= 2, direction = "forward",scope = list(lower= formula(null_model),upper= formula(lmfit) ) )
-step_pred <- predict(step_fit , Credit[testid , ])
-err_step<- abs(Credit$Balance[testid] - step_pred)
+step_pred <- predict(step_fit , credit_test_split)
+err_step<- abs(credit_test_split$Balance - step_pred)
 mean(abs(err_step))
 ```
 the chosen model is $$Balance ~ Rating + Income + Student + Limit + Cards$$ and we get sd of 80.94
@@ -175,11 +200,11 @@ when
 $p=length( \beta)$ and $\lambda$
 is a hyper parameter.
 
-```{r Lasso}
+```{r Lasso old, eval=FALSE, echo=FALSE}
 x <- scale(model.matrix(Balance ~ . - 1, data = Credit))
 y <- Credit$Balance
 #glmnet
-cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
+#cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
 ```
 
 This time, we need to set our hipper parameter, 
@@ -188,12 +213,29 @@ that lead to the minimum mean cross-validated error*
 
  <font size="2"> *[see also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf) </font> 
  
-```{r lambda.min}
+```{r lambda.min, eval=FALSE, echo=FALSE}
 lambda.min<- cvfit$lambda.min
 cpred <- predict(cvfit, x[testid , ], s = "lambda.min")
 err_cp<- abs(y[testid] - cpred)
 mean(abs(err_cp))
 ```
+
+```{r LM Lasso, warning= F}
+lasso_par <- linear_reg(mixture = 1,penalty = 0.01) %>% set_mode('regression') %>% 
+  set_engine("glmnet")
+lasso_fit <- lm_par %>% fit(Balance ~ . , dolche_credit_train)
+lasso_pred<- predict(lasso_fit, new_data = dolche_credit_test)
+# abs(Credit$Balance[testid] - lmpred)
+
+delta_lasso<- lasso_pred-dolche_credit_test$Balance
+delta_lasso %>% abs() %>% unlist() %>% mean(na.rm= T)
+
+cbind(lasso_pred,dolche_credit_test$Balance) %>%
+  rename(pred= 1, true= 2) %>% 
+  ggplot(aes(y=pred, x= true))+
+  geom_point()+geom_smooth()
+```
+
 ##  Trees
 
 The main algorithm in random forest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
@@ -210,19 +252,55 @@ For a small tree,this is a very weak learner, but it can be used to create deepe
 
 A mean of n-tree
 ```{r randomForest, cache= T}
-rf_s<- randomForest(formula= Balance ~ ., data = Credit[-testid , ],
+rf_s<- rand_forest(mode = "regression", trees = 1500, min_n = 5)%>%
+  set_mode("regression") %>% set_engine("randomForest")
+
+rf_fit<- rf_s %>% fit(Balance ~ . , dolche_credit_train)
+rf_pred <- predict(rf_fit, new_data = dolche_credit_test)
+
+delta_rf<- rf_pred-dolche_credit_test$Balance
+delta_rf %>% abs() %>% unlist() %>% mean(na.rm= T)
+
+#cbind(rf_pred,dolche_credit_test$Balance) %>%
+#  rename(pred= 1, true= 2) %>% 
+#  ggplot(aes(y=pred, x= true))+
+#  geom_point()+geom_smooth()
+```
+
+```{r old random,eval=FALSE}
+rf_s<- randomForest(formula= Balance ~ ., data = dolche_credit_train,
                     ntree= 1500, mtry= 6, na.action = na.omit )
 
-pred_s<- predict(rf_s,newdata = Credit[-testid , ] )
-rf_pred <- predict(rf_s , Credit[testid , ], s = "lambda.min")
-err_rf<- abs(y[testid] - rf_pred)
+pred_s<- predict(rf_s,newdata = dolche_credit_test )
+rf_pred <- predict(rf_s , dolche_credit_test, s = "lambda.min")
+err_rf<- abs(dolche_credit_test$Balance - rf_pred)
 mean(abs(err_rf))
 ```
 
-###  Adaboost
+###  XGBoost
 
-A mean of n-tree with weights
+Algorithm of gradient boosting trees
+
 ```{r adaboost, warning= F}
+xgb_s<-boost_tree(mode = "regression",
+                    trees= 1500, min_n= 5) %>%
+  set_engine('xgboost') %>% set_mode("regression")
+  
+xgb_fit<- xgb_s %>% fit(Balance ~ . , dolche_credit_train)
+#rf_pred <- predict(rf_fit, new_data = dolche_credit_test)
+
+pred_xgb<-  predict(xgb_fit, new_data = dolche_credit_test)
+err_xgb<- pred_xgb-dolche_credit_test$Balance
+err_xgb %>% abs() %>% unlist() %>% mean(na.rm= T)
+
+
+cbind(pred_xgb,dolche_credit_test$Balance) %>%
+  rename(pred= 1, true= 2) %>% 
+  ggplot(aes(y=pred, x= true))+
+  geom_point()+geom_smooth()
+```
+
+```{r adaboost old, warning= F,eval=FALSE}
 norm_y<- 2*y/(max(y)+min(y))-1
 
 adb_s<-randomForest(formula= Balance ~ ., data = Credit[-testid , ],
@@ -233,6 +311,7 @@ pred_abs<- head(as.vector(pred_abs),133)
 err_adb<- abs(y[testid] - pred_abs)
 mean(abs(err_adb))
 ```
+
 ##  Neural Network
 
 Creating of network of nonlinear function and weights, that evaluate the prediction.
@@ -262,10 +341,15 @@ modnn
 Using the net:
 
 ```{r apply Keras, echo=TRUE, results='hide', cache=TRUE}
+x <- model.matrix(Balance ~ . - 1, data = dolche_credit_train)
+x_test<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
+y <- dolche_credit_train$Balance
+y_test<- dolche_credit_test$Balance
+
 mod_Credit <- modnn %>% fit(
-  x[-testid , ], y[-testid], epochs = 1500, batch_size = 32,
-  validation_data = list(x[testid , ], y[testid ])
-)
+  x, y, epochs = 200, batch_size = 32,
+  validation_data = list(x_test, y_test))
+
 ```
 
 ### Keras result
@@ -281,9 +365,9 @@ plot(mod_Credit)+theme_gray()+
     legend.box.just = "right")#,
     #legend.margin = margin(6, 6, 6, 6))
 
-nnpred <- predict(modnn , x[testid , ])
-err_nn<- abs(y[testid] - nnpred)
-mean(abs(err_nn))
+nnpred <- predict(modnn , x_test) %>% as.data.frame()
+err_nn<- abs(y_test - nnpred)
+err_nn %>% unlist() %>% mean(na.rm= T)
 ```
 
 
@@ -294,22 +378,25 @@ We used the same seed to test all methods, so now we can compare the error of ea
 * Each time this scipt were running, we got different result, due to randomness of $testid$ , and of the deep learning models
 
 ```{r sum pred, echo=TRUE, cache=T}
-my_pred<- data.frame(c(lmpred,cpred,rf_pred,pred_abs,nnpred)) #pred data frame
-m<- length(testid)
-modl_nam<-c("Linear", "Lasso", "Random_forrest","Adaboost","Neural_network")
-my_pred$Model<- c(rep(modl_nam[1],m),rep(modl_nam[2],m),rep(modl_nam[3],m),
-                  rep(modl_nam[4],m),rep(modl_nam[5],m) ) #naming each model in pred data frame
-my_pred$Balance<-rep(y[testid],5)
-colnames(my_pred)[1]<- "Predict"
+modl_nam<-c('Balance', "Linear", "Lasso", "Random_forrest","xgboost","Neural_network")
+order_script<- order(modl_nam[-1])+1
 
-my_err<- as.data.frame(cbind(err_lm,err_cp,err_rf,err_adb,err_nn))
-my_var<- colMeans(my_err[sapply(my_err, is.numeric)]) 
+my_pred<- data.frame(cbind(dolche_credit_test$Balance,lm_pred,lasso_pred,rf_pred,pred_xgb,nnpred)) %>%  #pred data frame
+   `colnames<-`(modl_nam) %>% 
+  pivot_longer(cols = 2:6, names_to = "Model")
 
-#caption- var of the models alphabeticaly
-order_script<- order(modl_nam)
-script<- paste("sd of models: ",modl_nam[order_script[1]], "is", round(my_var[order_script[1]],3))
-for (i in order_script[-1]) {
-  script<- paste(script, ", ", modl_nam[i], "is", round(my_var[i],3) )}
+colnames(my_pred)[3]<- "Predict"
+
+my_err<- my_pred %>% mutate(Delta= Predict- Balance) %>% 
+  group_by(Model) %>% summarise_at(2, mean)
+
+#caption- var of the models alphabetically
+
+script_base<- map2_chr(my_err$Model, my_err$Predict, function(x,y) {paste0(x, " is ", round(y,3) )})
+script<- "SD of models: "
+for (i in script_base) {
+  script<- paste(script, ",", i)}
+script<- str_remove(script, ", ")
 
 my_pred %>%
   ggplot( aes(x= Model ,y=Balance-Predict, fill= Model)) +
@@ -323,6 +410,7 @@ my_pred %>%
     plot.caption = element_text(size = 8,hjust= 0),
     axis.title = element_text(size = 8))+ ylab("Error")+
   labs(title = "Error Violin",caption = script)
+
 ```
 # Discussion
 
