@@ -200,25 +200,11 @@ when
 $p=length( \beta)$ and $\lambda$
 is a hyper parameter.
 
-```{r Lasso old, eval=FALSE, echo=FALSE}
-x <- scale(model.matrix(Balance ~ . - 1, data = Credit))
-y <- Credit$Balance
-#glmnet
-#cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
-```
-
 This time, we need to set our hipper parameter, 
 $\lambda$
 that lead to the minimum mean cross-validated error*
 
  <font size="2"> *[see also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf) </font> 
- 
-```{r lambda.min, eval=FALSE, echo=FALSE}
-lambda.min<- cvfit$lambda.min
-cpred <- predict(cvfit, x[testid , ], s = "lambda.min")
-err_cp<- abs(y[testid] - cpred)
-mean(abs(err_cp))
-```
 
 ```{r LM Lasso, warning= F}
 lasso_par <- linear_reg(mixture = 1,penalty = 0.01) %>% set_mode('regression') %>% 
@@ -267,7 +253,7 @@ cbind(rf_pred,dolche_credit_test$Balance) %>%
   geom_point()+geom_smooth()
 ```
 
-```{r old random,eval=FALSE}
+```{r old random,eval=FALSE, echo=FALSE}
 rf_s<- randomForest(formula= Balance ~ ., data = dolche_credit_train,
                     ntree= 1500, mtry= 6, na.action = na.omit )
 
@@ -323,16 +309,22 @@ This method is the hardest to present due to the complexitivity of the net.
 we set our net using 2 layers of relu and then a dropout
 
 ```{r keras set, warning=FALSE}
-x <- model.matrix(Balance ~ . - 1, data = dolche_credit_train)
-x_test<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
-y <- dolche_credit_train$Balance
-y_test<- dolche_credit_test$Balance
+
+credit_nn_split<- initial_split(dolche_credit_train, prop = 0.8)
+credit_nn_train<- training(credit_nn_split)
+credit_nn_test<-  testing(credit_nn_split)
+
+x <- model.matrix(Balance ~ . - 1, data = credit_nn_train)
+x_test<- model.matrix(Balance ~ . - 1, data = credit_nn_test)
+y <- credit_nn_train$Balance
+y_test<- credit_nn_test$Balance
 
 modnn <- keras_model_sequential () %>%
   layer_dense(units = 50, activation = "relu",
               input_shape = ncol(x)) %>%
   layer_dropout(rate = 0.4) %>%
   layer_dense(units = 20, activation = 'relu') %>%
+  layer_dense(units = 4, activation = 'relu') %>%
   layer_dropout(rate = 0.2) %>%
   layer_dense(units = 1)
 
@@ -346,10 +338,8 @@ modnn
 Using the net:
 
 ```{r apply Keras, echo=TRUE, results='hide', cache=TRUE}
-
-
 mod_Credit <- modnn %>% fit(
-  x, y, epochs = 1000, batch_size = 32,
+  x, y, epochs = 1500, batch_size = 32,
   validation_data = list(x_test, y_test))
 
 ```
@@ -357,7 +347,7 @@ mod_Credit <- modnn %>% fit(
 ### Keras result
 
 ```{r Keras result, cache=T}
-summary(mod_Credit)
+mod_Credit
 
 plot(mod_Credit)+theme_gray()+
   theme(plot.caption = element_text(size = 6,hjust= 0),
@@ -366,7 +356,10 @@ plot(mod_Credit)+theme_gray()+
     legend.box.just = "right")#,
     #legend.margin = margin(6, 6, 6, 6))
 
-nnpred <- predict(modnn , x_test) %>% as.data.frame()
+dolche_credit_test_nn<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
+y <- dolche_credit_test$Balance
+
+nnpred <- predict(modnn ,dolche_credit_test_nn ) %>% as.data.frame()
 err_nn<- abs(y_test - nnpred)
 err_nn %>% unlist() %>% mean(na.rm= T)
 ```
@@ -414,12 +407,18 @@ my_pred %>%
 
 ```
 
+```{r barplot}
+my_err %>% 
+  ggplot(aes(x= reorder(Model, -Predict), y= Predict, fill= Predict))+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = round(Predict,2))  , vjust = +1.2, color= "White")
+```
 
 # Discussion
 
 If the winner of the error in prediction were not that clear, our $H_0$ would will be the linear model, since it's prediction is the easiest to understand and present.
 
-Amazingly, <b>the LM(var 82) did nothing compare to the NN(var 22)</b>, with only almost quarter of the linear's error.
+Amazingly, <b>the LM did nothing compare to the NN</b>, with only almost quarter of the linear's error.
 
 At the same time, Lasso(var 81) did only slightly better then the liner, both better than the ADB(var 85).
 
@@ -427,7 +426,5 @@ Another clear effect is this of the ADB comparing to the RF(var 101), which had 
 
 To sum it up, though rerunning of this script might create a different result, this modeling comparing to data frame prediction show us how <b>using weights or regulation in models can get better models comparing to the same model. In contrast, some time different models create worse prediction than the unregulated ones</b>, like RF and LM. The most complex model, NN, overcome all models,
 and known to have huge potential, as long as understanding the effect of each variable is not needed.
-
-<b>In my opinion, the best models to predict with here are the Lasso and the Neural network.</b>
 
 .

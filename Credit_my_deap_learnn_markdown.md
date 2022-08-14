@@ -421,7 +421,7 @@ delta_lm<- lm_pred-dolche_credit_test$Balance
 delta_lm %>% abs() %>% unlist() %>% mean(na.rm= T)
 ```
 
-    ## [1] 82.03422
+    ## [1] 71.45272
 
 ``` r
 cbind(lm_pred,dolche_credit_test$Balance) %>%
@@ -448,124 +448,110 @@ null_model <- lm(Balance ~1, data =  credit_train_split) #null model for startin
 step_fit <- stepAIC (null_model,k= 2, direction = "forward",scope = list(lower= formula(null_model),upper= formula(lmfit) ) )
 ```
 
-    ## Start:  AIC=3919.26
+    ## Start:  AIC=3938.25
     ## Balance ~ 1
     ## 
     ##             Df Sum of Sq      RSS    AIC
-    ## + Rating     1  49076033 17228831 3490.0
-    ## + Limit      1  48744461 17560403 3496.1
-    ## + Income     1  13195465 53109399 3850.3
-    ## + Student    1   5580299 60724565 3893.1
-    ## + Cards      1    644265 65660599 3918.1
-    ## + Bride      1    429332 65875532 3919.2
-    ## <none>                   66304864 3919.3
-    ## + High_deg   1    287056 66017808 3919.9
-    ## + Ethnicity  2    507648 65797216 3920.8
-    ## + Education  1     40409 66264455 3921.1
-    ## + Gender     1     31094 66273770 3921.1
-    ## + ID         1     23033 66281831 3921.2
-    ## + Age_2      1      8783 66296081 3921.2
-    ## + Married    1       829 66304035 3921.3
-    ## + Age        1        21 66304843 3921.3
+    ## + Rating     1  53151856 17205117 3489.6
+    ## + Limit      1  52985720 17371253 3492.6
+    ## + Income     1  15831253 54525720 3858.7
+    ## + Student    1   5242619 65114354 3915.5
+    ## <none>                   70356973 3938.2
+    ## + Cards      1    407877 69949096 3938.4
+    ## + Married    1     84816 70272157 3939.9
+    ## + Age_2      1     32756 70324217 3940.1
+    ## + Education  1     24077 70332896 3940.1
+    ## + ID         1     15426 70341547 3940.2
+    ## + Gender     1     15171 70341802 3940.2
+    ## + Age        1     13775 70343198 3940.2
+    ## + Bride      1       666 70356307 3940.2
+    ## + High_deg   1       491 70356482 3940.2
+    ## + Ethnicity  2      8999 70347973 3942.2
     ## 
-    ## Step:  AIC=3490.01
+    ## Step:  AIC=3489.57
     ## Balance ~ Rating
     ## 
     ##             Df Sum of Sq      RSS    AIC
-    ## + Income     1   8745585  8483246 3265.3
-    ## + Student    1   4752568 12476263 3388.7
-    ## + Age_2      1    688404 16540427 3479.0
-    ## + Age        1    592966 16635865 3480.8
-    ## + Cards      1    234951 16993880 3487.6
-    ## <none>                   17228831 3490.0
-    ## + Married    1     81820 17147011 3490.5
-    ## + Ethnicity  2    122635 17106195 3491.7
-    ## + ID         1       744 17228087 3492.0
-    ## + Education  1       495 17228336 3492.0
-    ## + Bride      1        30 17228801 3492.0
-    ## + Gender     1        13 17228818 3492.0
-    ## + Limit      1         3 17228828 3492.0
-    ## + High_deg   1         0 17228831 3492.0
+    ## + Income     1   8351370  8853747 3279.0
+    ## + Student    1   4703736 12501381 3389.4
+    ## + Age_2      1    537258 16667859 3481.4
+    ## + Age        1    480124 16724992 3482.5
+    ## + Married    1    273609 16931508 3486.4
+    ## <none>                   17205117 3489.6
+    ## + Cards      1     89448 17115669 3489.9
+    ## + ID         1     41965 17163152 3490.8
+    ## + Education  1     34316 17170801 3490.9
+    ## + Bride      1     27477 17177639 3491.1
+    ## + Ethnicity  2    131637 17073479 3491.1
+    ## + Limit      1     19340 17185776 3491.2
+    ## + High_deg   1      8513 17196603 3491.4
+    ## + Gender     1      1323 17203794 3491.5
     ## 
-    ## Step:  AIC=3265.29
+    ## Step:  AIC=3278.97
     ## Balance ~ Rating + Income
     ## 
     ##             Df Sum of Sq     RSS    AIC
-    ## + Student    1   5160404 3322842 2967.4
-    ## + Age_2      1    100098 8383148 3263.5
-    ## + Age        1     90890 8392355 3263.8
-    ## + Married    1     82281 8400965 3264.2
-    ## + Limit      1     80638 8402608 3264.2
-    ## + High_deg   1     58471 8424774 3265.1
-    ## <none>                   8483246 3265.3
-    ## + Ethnicity  2     87984 8395261 3266.0
-    ## + Education  1     20300 8462945 3266.5
-    ## + Cards      1     11723 8471522 3266.8
-    ## + Bride      1      5983 8477262 3267.1
-    ## + ID         1      1894 8481352 3267.2
-    ## + Gender     1       269 8482977 3267.3
+    ## + Student    1   5307272 3546474 2988.2
+    ## + Married    1    141037 8712709 3275.8
+    ## + Limit      1     94886 8758861 3277.5
+    ## <none>                   8853747 3279.0
+    ## + Age_2      1     42795 8810951 3279.4
+    ## + Ethnicity  2     91891 8761856 3279.6
+    ## + Age        1     32608 8821138 3279.8
+    ## + High_deg   1     26836 8826911 3280.0
+    ## + Bride      1     25601 8828146 3280.0
+    ## + Education  1     13998 8839748 3280.5
+    ## + Gender     1      1147 8852599 3280.9
+    ## + Cards      1       300 8853446 3281.0
+    ## + ID         1       124 8853623 3281.0
     ## 
-    ## Step:  AIC=2967.36
+    ## Step:  AIC=2988.21
     ## Balance ~ Rating + Income + Student
     ## 
     ##             Df Sum of Sq     RSS    AIC
-    ## + Limit      1    157491 3165350 2953.8
-    ## + Age        1     69685 3253157 2962.6
-    ## + Age_2      1     67849 3254993 2962.8
-    ## <none>                   3322842 2967.4
-    ## + Married    1     16274 3306568 2967.8
-    ## + Cards      1     11277 3311565 2968.3
-    ## + Bride      1     11118 3311724 2968.3
-    ## + Gender     1     10310 3312532 2968.4
-    ## + Ethnicity  2     30368 3292473 2968.4
-    ## + High_deg   1      7211 3315631 2968.7
-    ## + ID         1      6320 3316521 2968.8
-    ## + Education  1        84 3322758 2969.4
+    ## + Limit      1    152275 3394199 2976.2
+    ## + Married    1     23523 3522951 2988.1
+    ## <none>                   3546474 2988.2
+    ## + Age        1     19713 3526762 2988.4
+    ## + Age_2      1     18403 3528071 2988.5
+    ## + Gender     1     17622 3528852 2988.6
+    ## + Bride      1      8282 3538193 2989.5
+    ## + Ethnicity  2     28544 3517931 2989.6
+    ## + ID         1      3461 3543013 2989.9
+    ## + Cards      1      2966 3543508 2989.9
+    ## + Education  1      2317 3544157 2990.0
+    ## + High_deg   1       180 3546294 2990.2
     ## 
-    ## Step:  AIC=2953.83
+    ## Step:  AIC=2976.16
     ## Balance ~ Rating + Income + Student + Limit
     ## 
     ##             Df Sum of Sq     RSS    AIC
-    ## + Cards      1    134552 3030799 2941.9
-    ## + Age        1     62107 3103243 2949.5
-    ## + Age_2      1     61416 3103935 2949.6
-    ## <none>                   3165350 2953.8
-    ## + Bride      1     12898 3152453 2954.5
-    ## + Gender     1     12268 3153082 2954.6
-    ## + Married    1      9413 3155937 2954.9
-    ## + Ethnicity  2     24395 3140955 2955.3
-    ## + High_deg   1      3360 3161990 2955.5
-    ## + ID         1      3195 3162155 2955.5
-    ## + Education  1       534 3164816 2955.8
+    ## + Cards      1    114863 3279336 2967.2
+    ## <none>                   3394199 2976.2
+    ## + Gender     1     20945 3373254 2976.2
+    ## + Age        1     12535 3381664 2977.0
+    ## + Married    1     12122 3382078 2977.0
+    ## + Age_2      1     12017 3382182 2977.0
+    ## + Bride      1      9790 3384409 2977.2
+    ## + Education  1      6339 3387860 2977.6
+    ## + ID         1      3964 3390235 2977.8
+    ## + High_deg   1       340 3393859 2978.1
+    ## + Ethnicity  2     19789 3374410 2978.3
     ## 
-    ## Step:  AIC=2941.93
+    ## Step:  AIC=2967.15
     ## Balance ~ Rating + Income + Student + Limit + Cards
     ## 
     ##             Df Sum of Sq     RSS    AIC
-    ## + Age        1     62027 2968772 2937.3
-    ## + Age_2      1     59422 2971376 2937.6
-    ## <none>                   3030799 2941.9
-    ## + Gender     1     10149 3020650 2942.8
-    ## + Bride      1      6830 3023969 2943.2
-    ## + ID         1      4884 3025914 2943.4
-    ## + High_deg   1      4262 3026536 2943.5
-    ## + Married    1      3855 3026943 2943.5
-    ## + Education  1       255 3030544 2943.9
-    ## + Ethnicity  2     18210 3012589 2944.0
-    ## 
-    ## Step:  AIC=2937.31
-    ## Balance ~ Rating + Income + Student + Limit + Cards + Age
-    ## 
-    ##             Df Sum of Sq     RSS    AIC
-    ## <none>                   2968772 2937.3
-    ## + Gender     1    9393.6 2959378 2938.3
-    ## + Bride      1    8715.8 2960056 2938.4
-    ## + Married    1    6526.4 2962245 2938.6
-    ## + ID         1    6032.9 2962739 2938.7
-    ## + High_deg   1    3942.8 2964829 2938.9
-    ## + Age_2      1     356.4 2968415 2939.3
-    ## + Education  1     163.8 2968608 2939.3
-    ## + Ethnicity  2   11907.8 2956864 2940.0
+    ## <none>                   3279336 2967.2
+    ## + Gender     1   17326.3 3262010 2967.4
+    ## + Age        1   15470.3 3263866 2967.6
+    ## + Age_2      1   13615.1 3265721 2967.8
+    ## + Married    1   10700.0 3268636 2968.1
+    ## + Education  1   10049.7 3269286 2968.2
+    ## + Bride      1    7327.6 3272008 2968.4
+    ## + ID         1    3706.4 3275630 2968.8
+    ## + High_deg   1     549.1 3278787 2969.1
+    ## + Ethnicity  2   17755.9 3261580 2969.4
 
 ``` r
 step_pred <- predict(step_fit , credit_test_split)
@@ -573,7 +559,7 @@ err_step<- abs(credit_test_split$Balance - step_pred)
 mean(abs(err_step))
 ```
 
-    ## [1] 80.76765
+    ## [1] 70.66348
 
 the chosen model is
 
@@ -628,19 +614,19 @@ p
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--440.13
+-413.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-75.20
+74.72
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>\<0.001</strong>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--491.90
+-509.87
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-27.34
+22.52
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
 <strong>\<0.001</strong>
@@ -651,13 +637,13 @@ p
 ID
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.03
+0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 0.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.547
+0.647
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -671,19 +657,19 @@ ID
 Income
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--7.80
+-7.73
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.26
+0.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>\<0.001</strong>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--7.76
+-7.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.26
+0.27
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
 <strong>\<0.001</strong>
@@ -706,7 +692,7 @@ Limit
 0.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.03
+0.04
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
 <strong>\<0.001</strong>
@@ -717,22 +703,22 @@ Limit
 Rating
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.30
+1.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.53
+0.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.015</strong>
+<strong>0.040</strong>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.20
+1.09
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.52
+0.57
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
-<strong>0.022</strong>
+0.059
 </td>
 </tr>
 <tr>
@@ -740,22 +726,22 @@ Rating
 Cards
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-18.10
+17.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.07
+5.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>\<0.001</strong>
+<strong>0.001</strong>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-18.69
+16.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.96
+5.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
-<strong>\<0.001</strong>
+<strong>0.001</strong>
 </td>
 </tr>
 <tr>
@@ -763,22 +749,19 @@ Cards
 Age
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.90
+-1.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.28
+2.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.405
+0.520
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
-<strong>0.011</strong>
 </td>
 </tr>
 <tr>
@@ -786,13 +769,13 @@ Age
 Education
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.60
+-4.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-3.18
+3.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.259
+0.194
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -806,13 +789,13 @@ Education
 Gender \[Female\]
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--13.04
+-26.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-18.03
+18.71
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.470
+0.159
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -826,19 +809,19 @@ Gender \[Female\]
 Student \[Yes\]
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-432.81
+419.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-18.76
+18.72
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>\<0.001</strong>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-434.55
+419.43
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-18.45
+18.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  col7">
 <strong>\<0.001</strong>
@@ -849,13 +832,13 @@ Student \[Yes\]
 Married \[Yes\]
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--12.42
+-24.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-16.07
+17.04
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.440
+0.157
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -869,13 +852,13 @@ Married \[Yes\]
 Ethnicity \[Asian\]
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-20.26
+20.75
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-16.27
+16.53
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.214
+0.210
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -889,13 +872,13 @@ Ethnicity \[Asian\]
 Ethnicity \[Caucasian\]
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-11.54
+6.76
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-13.79
+14.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.403
+0.641
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -909,13 +892,13 @@ Ethnicity \[Caucasian\]
 High degTRUE
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-26.07
+20.80
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-20.82
+22.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.211
+0.350
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -935,7 +918,7 @@ Age 2
 0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.621
+0.643
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -949,13 +932,13 @@ Age 2
 BrideTRUE
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-3.46
+21.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-23.04
+23.93
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.881
+0.372
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 </td>
@@ -980,10 +963,10 @@ Observations
 R<sup>2</sup> / R<sup>2</sup> adjusted
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="3">
-0.956 / 0.954
+0.955 / 0.953
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="3">
-0.955 / 0.954
+0.953 / 0.953
 </td>
 </tr>
 <tr>
@@ -991,10 +974,10 @@ R<sup>2</sup> / R<sup>2</sup> adjusted
 log-Likelihood
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="3">
--1912.839
+-1926.873
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="3">
--1915.714
+-1931.633
 </td>
 </tr>
 </table>
@@ -1036,7 +1019,7 @@ delta_lasso<- lasso_pred-dolche_credit_test$Balance
 delta_lasso %>% abs() %>% unlist() %>% mean(na.rm= T)
 ```
 
-    ## [1] 82.03422
+    ## [1] 71.45272
 
 ``` r
 cbind(lasso_pred,dolche_credit_test$Balance) %>%
@@ -1085,7 +1068,7 @@ delta_rf<- rf_pred-dolche_credit_test$Balance
 delta_rf %>% abs() %>% unlist() %>% mean(na.rm= T)
 ```
 
-    ## [1] 100.0581
+    ## [1] 82.71651
 
 ``` r
 cbind(rf_pred,dolche_credit_test$Balance) %>%
@@ -1097,16 +1080,6 @@ cbind(rf_pred,dolche_credit_test$Balance) %>%
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
 ![](Credit_my_deap_learnn_markdown_files/figure-gfm/randomForest-1.png)<!-- -->
-
-``` r
-rf_s<- randomForest(formula= Balance ~ ., data = dolche_credit_train,
-                    ntree= 1500, mtry= 6, na.action = na.omit )
-
-pred_s<- predict(rf_s,newdata = dolche_credit_test )
-rf_pred <- predict(rf_s , dolche_credit_test, s = "lambda.min")
-err_rf<- abs(dolche_credit_test$Balance - rf_pred)
-mean(abs(err_rf))
-```
 
 ### XGBoost
 
@@ -1125,7 +1098,7 @@ err_xgb<- pred_xgb-dolche_credit_test$Balance
 err_xgb %>% abs() %>% unlist() %>% mean(na.rm= T)
 ```
 
-    ## [1] 56.51138
+    ## [1] 63.34038
 
 ``` r
 cbind(pred_xgb,dolche_credit_test$Balance) %>%
@@ -1163,16 +1136,21 @@ net.
 we set our net using 2 layers of relu and then a dropout
 
 ``` r
-x <- model.matrix(Balance ~ . - 1, data = dolche_credit_train)
-x_test<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
-y <- dolche_credit_train$Balance
-y_test<- dolche_credit_test$Balance
+credit_nn_split<- initial_split(dolche_credit_train, prop = 0.8)
+credit_nn_train<- training(credit_nn_split)
+credit_nn_test<-  testing(credit_nn_split)
+
+x <- model.matrix(Balance ~ . - 1, data = credit_nn_train)
+x_test<- model.matrix(Balance ~ . - 1, data = credit_nn_test)
+y <- credit_nn_train$Balance
+y_test<- credit_nn_test$Balance
 
 modnn <- keras_model_sequential () %>%
   layer_dense(units = 50, activation = "relu",
               input_shape = ncol(x)) %>%
   layer_dropout(rate = 0.4) %>%
   layer_dense(units = 20, activation = 'relu') %>%
+  layer_dense(units = 4, activation = 'relu') %>%
   layer_dropout(rate = 0.2) %>%
   layer_dense(units = 1)
 ```
@@ -1191,14 +1169,15 @@ modnn
     ## ________________________________________________________________________________
     ##  Layer (type)                       Output Shape                    Param #     
     ## ================================================================================
-    ##  dense_2 (Dense)                    (None, 50)                      1050        
+    ##  dense_3 (Dense)                    (None, 50)                      1050        
     ##  dropout_1 (Dropout)                (None, 50)                      0           
-    ##  dense_1 (Dense)                    (None, 20)                      1020        
-    ##  dropout (Dropout)                  (None, 20)                      0           
-    ##  dense (Dense)                      (None, 1)                       21          
+    ##  dense_2 (Dense)                    (None, 20)                      1020        
+    ##  dense_1 (Dense)                    (None, 4)                       84          
+    ##  dropout (Dropout)                  (None, 4)                       0           
+    ##  dense (Dense)                      (None, 1)                       5           
     ## ================================================================================
-    ## Total params: 2,091
-    ## Trainable params: 2,091
+    ## Total params: 2,159
+    ## Trainable params: 2,159
     ## Non-trainable params: 0
     ## ________________________________________________________________________________
 
@@ -1206,19 +1185,22 @@ Using the net:
 
 ``` r
 mod_Credit <- modnn %>% fit(
-  x, y, epochs = 1000, batch_size = 32,
+  x, y, epochs = 1500, batch_size = 32,
   validation_data = list(x_test, y_test))
 ```
 
 ### Keras result
 
 ``` r
-summary(mod_Credit)
+mod_Credit
 ```
 
-    ##         Length Class  Mode
-    ## params  3      -none- list
-    ## metrics 4      -none- list
+    ## 
+    ## Final epoch (plot to see history):
+    ##                    loss: 75,607
+    ##     mean_absolute_error: 165.8
+    ##                val_loss: 5,871
+    ## val_mean_absolute_error: 55.25
 
 ``` r
 plot(mod_Credit)+theme_gray()+
@@ -1233,12 +1215,15 @@ plot(mod_Credit)+theme_gray()+
 ``` r
     #legend.margin = margin(6, 6, 6, 6))
 
-nnpred <- predict(modnn , x_test) %>% as.data.frame()
+dolche_credit_test_nn<- model.matrix(Balance ~ . - 1, data = dolche_credit_test)
+y <- dolche_credit_test$Balance
+
+nnpred <- predict(modnn ,dolche_credit_test_nn ) %>% as.data.frame()
 err_nn<- abs(y_test - nnpred)
 err_nn %>% unlist() %>% mean(na.rm= T)
 ```
 
-    ## [1] 23.31748
+    ## [1] 436.8708
 
 ## Sum all result
 
@@ -1286,15 +1271,25 @@ my_pred %>%
 ```
 
 ![](Credit_my_deap_learnn_markdown_files/figure-gfm/sum%20pred-1.png)<!-- -->
-\# Discussion
+
+``` r
+my_err %>% 
+  ggplot(aes(x= reorder(Model, -Predict), y= Predict, fill= Predict))+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label = round(Predict,2))  , vjust = +1.2, color= "White")
+```
+
+![](Credit_my_deap_learnn_markdown_files/figure-gfm/barplot-1.png)<!-- -->
+
+# Discussion
 
 If the winner of the error in prediction were not that clear, our
 ![H_0](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;H_0 "H_0")
 would will be the linear model, since it’s prediction is the easiest to
 understand and present.
 
-Amazingly, <b>the LM(var 82) did nothing compare to the NN(var 22)</b>,
-with only almost quarter of the linear’s error.
+Amazingly, <b>the LM did nothing compare to the NN</b>, with only almost
+quarter of the linear’s error.
 
 At the same time, Lasso(var 81) did only slightly better then the liner,
 both better than the ADB(var 85).
@@ -1311,8 +1306,5 @@ prediction than the unregulated ones</b>, like RF and LM. The most
 complex model, NN, overcome all models, and known to have huge
 potential, as long as understanding the effect of each variable is not
 needed.
-
-<b>In my opinion, the best models to predict with here are the Lasso and
-the Neural network.</b>
 
 .
