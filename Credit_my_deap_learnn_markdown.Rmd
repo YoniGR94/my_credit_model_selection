@@ -20,9 +20,9 @@ About this data:
 
 ## set Data
 
-first, let's set the Environment
+First, let's set the Environment
 
-libraries:
+Libraries:
 
 ```{r library, error=FALSE, message=FALSE, warning=FALSE}
 library(easypackages)
@@ -33,6 +33,7 @@ library(ISLR)
 attach(Credit)
 #random Forest
 library(randomForest)
+library(doParallel)
 #other models
 libraries('glmnet','Rcmdr','MASS')
 #neural network
@@ -71,7 +72,7 @@ Credit %>%
 ```
 As we can see, $Balance$ is not normal, and has a right tail.
 
-trying to predict the Balance, one cal ask about race and/or gender bias. Does this factor alone predict the result? and age?
+Trying to predict the Balance, one cal ask about race and/or gender bias. Does this factor alone predict the result? and age?
 
 ```{r visual trend, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
 Credit %>%
@@ -139,6 +140,26 @@ dolche_credit_test<- credit_train_split%>% dolche_de_leche()%>% prep(credit_trai
 Finally, we can predict with our models
 
 # Models
+
+prologue: predict if Credit is 0.
+
+This part is unfinished. here I create logistic prediction of Balance=0 in order to use in as another variable.
+
+```{r ad logist 0 prediction, eval=FALSE}
+
+log_data<- dolche_credit_train %>% 
+  mutate(Balance =  (Balance==0) %>% as.factor())
+
+log_fit <- 
+  logistic_reg(mode = "classification") %>%
+  set_engine(engine = "glm") %>% 
+  fit(Balance ~ ., data =log_data)
+
+log_pred<- predict(log_fit, new_data = dolche_credit_test)
+
+dolche_credit_train<- cbind(dolche_credit_train,log_data$Balance)
+dolche_credit_test<- cbind(dolche_credit_test,log_pred )
+```
 
 ## Linear
 
@@ -237,7 +258,8 @@ For a small tree,this is a very weak learner, but it can be used to create deepe
 ###  Random Forest
 
 A mean of n-tree
-```{r randomForest, cache= T}
+
+```{r randomForest, cache= T, eval=FALSE}
 rf_s<- rand_forest(mode = "regression", trees = 1500, min_n = 5)%>%
   set_mode("regression") %>% set_engine("randomForest")
 
@@ -252,22 +274,86 @@ cbind(rf_pred,dolche_credit_test$Balance) %>%
   ggplot(aes(y=pred, x= true))+
   geom_point()+geom_smooth()
 ```
+___
 
-```{r old random,eval=FALSE, echo=FALSE}
-rf_s<- randomForest(formula= Balance ~ ., data = dolche_credit_train,
-                    ntree= 1500, mtry= 6, na.action = na.omit )
+```{r randomForest to tune, warning=FALSE, message=FALSE,cache=TRUE}
+rf_spec <- rand_forest(mode = "regression",
+  trees = 800,
+  min_n = tune(), mtry = tune() ) %>% 
+  set_engine("randomForest") %>% set_mode("regression")
+rf_spec
 
-pred_s<- predict(rf_s,newdata = dolche_credit_test )
-rf_pred <- predict(rf_s , dolche_credit_test, s = "lambda.min")
-err_rf<- abs(dolche_credit_test$Balance - rf_pred)
-mean(abs(err_rf))
+rf_grid <- grid_latin_hypercube(
+  min_n(),
+  finalize(mtry(), dolche_credit_train),
+  size = 6)
+rf_grid
+
+rf_wf <- workflow() %>%
+  add_formula(Balance ~ .) %>%
+  add_model(rf_spec)
+
+vb_folds_rf <- vfold_cv(dolche_credit_train, strata = Balance, v= 5)
 ```
+
+```{r run the tuning of randomForest}
+
+set.seed(234)
+rf_res <- tune_grid(
+  rf_wf,
+  resamples = vb_folds_rf,
+  grid = rf_grid,
+  control = control_grid(save_pred = TRUE) )
+```
+
+```{r randomForest to tune res, warning=FALSE,cache=TRUE, message=FALSE}
+
+rf_res %>% #???
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  #select(mean, mtry:tree_depth) %>%
+  pivot_longer(mtry:min_n,
+               values_to = "value",
+               names_to = "parameter") %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(alpha = 0.8, show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "rmse")+theme_linedraw()
+
+ggsave("photo_graph/myplot_rf.png")
+
+show_best(rf_res, "rmse")# %>% select(-.estimator,-n,-.metric)
+
+best_tune_rf <- select_best(rf_res, "rmse")
+write_csv(best_tune_rf,"data/best_tune_rf.csv") #in any case, I save them to cut reproducing
+```
+
+![](myplot.png)
+
+```{r print fit randomForest}
+best_tune_rf<- read_csv("data/best_tune_rf.csv")
+YG_tuned_boost <- rand_forest(mode = "regression", trees = 1500, min_n = best_tune_rf$min_n, mtry =best_tune_rf$mtry,
+                           )%>%
+  set_mode("regression") %>% set_engine("randomForest")
+
+mod_boost_final<- YG_tuned_boost %>% fit(Balance~ ., data= dolche_credit_train)
+rf_pred<-   mod_boost_final %>% predict(new_data= dolche_credit_test)%>% as.data.frame()
+
+delta_rf<- rf_pred-dolche_credit_test$Balance
+delta_rf %>% abs() %>% unlist() %>% mean(na.rm= T)
+
+cbind(rf_pred,dolche_credit_test$Balance) %>%
+  rename(pred= 1, true= 2) %>% 
+  ggplot(aes(y=pred, x= true))+
+  geom_point()+geom_smooth()
+```
+___
 
 ###  XGBoost
 
 Algorithm of gradient boosting trees
 
-```{r adaboost, warning= F}
+```{r adaboost, warning= F, eval=FALSE}
 xgb_s<-boost_tree(mode = "regression",
                     trees= 1500, min_n= 5) %>%
   set_engine('xgboost') %>% set_mode("regression")
@@ -285,6 +371,80 @@ cbind(pred_xgb,dolche_credit_test$Balance) %>%
   ggplot(aes(y=pred, x= true))+
   geom_point()+geom_smooth()
 ```
+
+___
+
+```{r xgboost to tune, warning=FALSE, message=FALSE,cache=TRUE}
+xgb_spec <- boost_tree(mode = "regression",
+  trees = 800, tree_depth = tune(),sample_size = 0.4,
+  min_n = tune(), mtry = tune() ) %>% 
+  set_engine("xgboost") %>% set_mode("regression")
+xgb_spec
+
+xgb_grid <- grid_latin_hypercube(
+  min_n(),tree_depth(),
+  finalize(mtry(), dolche_credit_train),
+  size = 5)
+xgb_grid
+
+xgb_wf <- workflow() %>%
+  add_formula(Balance ~ .) %>%
+  add_model(xgb_spec)
+
+vb_folds_xgb <- vfold_cv(dolche_credit_train, strata = Balance, v= 5)
+```
+
+```{r run the tuning of}
+
+set.seed(234)
+xgb_res <- tune_grid(
+  xgb_wf,
+  resamples = vb_folds_xgb,
+  grid = xgb_grid,
+  control = control_grid(save_pred = TRUE) )
+```
+
+```{r xgboost to tune res, warning=FALSE,cache=TRUE, message=FALSE}
+#abc<- 
+xgb_res %>% #???
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  #select(mean, mtry:tree_depth) %>%
+  pivot_longer(mtry:tree_depth,
+               values_to = "value",
+               names_to = "parameter") %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(alpha = 0.8, show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "rmse")+theme_linedraw()
+
+ggsave("photo_graph/myplot_xgb.png")
+
+show_best(xgb_res, "rmse")# %>% select(-.estimator,-n,-.metric)
+
+best_tune_XGB <- select_best(xgb_res, "rmse")
+write_csv(best_tune_XGB,"data/best_tune_XGB.csv") #in any case, I save them to cut reproducing
+```
+
+![](myplot.png)
+
+```{r print fit XGBoost}
+best_tune_XGB<- read_csv("data/best_tune_XGB.csv")
+YG_tuned_boost <- boost_tree(mode = "regression", trees = 1500, min_n = best_tune_XGB$min_n, mtry =best_tune_XGB$mtry,
+                           tree_depth= best_tune_XGB$tree_depth )%>%
+  set_mode("regression") %>% set_engine("xgboost")
+
+mod_boost_final<- YG_tuned_boost %>% fit(Balance~ ., data= dolche_credit_train)
+pred_xgb<-   mod_boost_final %>% predict(new_data= dolche_credit_test)%>% as.data.frame()
+err_xgb<- pred_xgb-dolche_credit_test$Balance
+err_xgb %>% abs() %>% unlist() %>% mean(na.rm= T)
+
+cbind(pred_xgb,dolche_credit_test$Balance) %>%
+  rename(pred= 1, true= 2) %>% 
+  ggplot(aes(y=pred, x= true))+
+  geom_point()+geom_smooth()
+```
+___
 
 ```{r adaboost old, warning= F,eval=FALSE}
 norm_y<- 2*y/(max(y)+min(y))-1
@@ -387,7 +547,7 @@ my_err<- my_pred %>% mutate(Delta= Predict- Balance) %>%
 #caption- var of the models alphabetically
 
 script_base<- map2_chr(my_err$Model, my_err$Predict, function(x,y) {paste0(x, " is ", round(y,3) )})
-script<- "SD of models: "
+script<- "SD: "
 for (i in script_base) {
   script<- paste(script, ",", i)}
 script<- str_remove(script, ", ")

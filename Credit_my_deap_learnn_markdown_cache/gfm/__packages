@@ -23,6 +23,9 @@ stringr
 forcats
 ISLR
 randomForest
+foreach
+iterators
+doParallel
 Matrix
 glmnet
 carData
@@ -40,3 +43,4 @@ viridis
 knitr
 kableExtra
 sjPlot
+xgboost
