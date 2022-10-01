@@ -141,12 +141,11 @@ Finally, we can predict with our models
 
 # Models
 
-prologue: predict if Credit is 0.
+ __draft: predict if Credit is 0.__
 
 This part is unfinished. here I create logistic prediction of Balance=0 in order to use in as another variable.
 
 ```{r ad logist 0 prediction, eval=FALSE}
-
 log_data<- dolche_credit_train %>% 
   mutate(Balance =  (Balance==0) %>% as.factor())
 
@@ -384,7 +383,7 @@ xgb_spec
 xgb_grid <- grid_latin_hypercube(
   min_n(),tree_depth(),
   finalize(mtry(), dolche_credit_train),
-  size = 5)
+  size = 6)
 xgb_grid
 
 xgb_wf <- workflow() %>%
@@ -484,9 +483,9 @@ modnn <- keras_model_sequential () %>%
               input_shape = ncol(x)) %>%
   layer_dropout(rate = 0.4) %>%
   layer_dense(units = 20, activation = 'relu') %>%
-  layer_dense(units = 4, activation = 'relu') %>%
+  layer_dense(units = 4, activation = 'sigmoid') %>%
   layer_dropout(rate = 0.2) %>%
-  layer_dense(units = 1)
+  layer_dense(units = 1, activation = 'relu')
 
 modnn %>% compile(loss = "mse",
                   optimizer = optimizer_rmsprop (),
