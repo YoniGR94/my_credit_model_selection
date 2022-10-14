@@ -25,3 +25,5 @@ The main result will be discussed,
 and also this graph:
 
 ![](https://github.com/YoniGR94/my_credit_model_selection/blob/main/Credit_my_deap_learnn_markdown_files/figure-gfm/sum%20pred-1.png?raw=true)
+
+![](https://img.shields.io/github/commit-activity/m/YoniGR94/my_credit_model_selection?label=commited&logo=git&style=plastic)
