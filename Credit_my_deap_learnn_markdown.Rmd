@@ -574,7 +574,7 @@ We used the same seed to test all methods, so now we can compare the error of ea
 * Each time this scipt were running, we got different result, due to randomness of $testid$ , and of the deep learning models
 
 ```{r sum pred, echo=TRUE, cache=T}
-modl_nam<-c('Balance', "Linear", "Lasso", "Random_forrest","xgboost","Neural_network")
+modl_nam<-c("Balance", "Linear", "Lasso", "Random_forrest","xgboost","Neural_network")
 order_script<- order(modl_nam[-1])+1
 
 my_pred<- data.frame(cbind(dolche_credit_test$Balance,lm_pred,lasso_pred,rf_pred,pred_xgb,nnpred)) %>%  #pred data frame
