@@ -2,15 +2,20 @@
 title: "Different Techniches to Analyze Credit Balance"
 output: github_document
 author: "Yoni"
+
+date: "`r format(Sys.time(), '%d %m, %Y')`"
 always_allow_html: true
 ---
 
 # Intro
+
 How good can we predict Credit balance?
 
 What is the best way to check it?
 
-In order to check which method and models better, we will use the Credit data from ILSR package.
+In order to check which method and models better, I will use the Credit data from ILSR package.
+
+In this project, I analyze credit risk data to predict loan default using a statistical methods and deep learning approach in R
 
 About this data:
 
@@ -18,21 +23,21 @@ About this data:
 
 <font size="2">*[RDocumentation](https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Credit)</font>
 
-## set Data
+### set Data
 
 First, let's set the Environment
 
-### Main Libraries:
+#### Main Libraries:
 
-# tidymodels
+* tidymodels
 
-# tidyverse
+* tidyverse
 
-# Credit (the data)
+* Credit (the data)
 
-# model's packages- glmnet,randomForest, tensorflow, keras
+* model's packages- glmnet,randomForest, tensorflow, keras
 
-# visual packages- viridis,hrbrthemes, knitr
+* visual packages- viridis,hrbrthemes, knitr
 
 ```{r library, error=FALSE, message=FALSE, warning=FALSE, echo= F}
 library(easypackages)
@@ -77,7 +82,10 @@ Credit %>%
   ggplot(aes(x=Balance))+
   geom_histogram(color= alpha("black", 0.7),fill= alpha("darkgreen", 0.8) )+
   geom_vline(xintercept= mean(Balance), color= "red",lty= "dashed")+
-  theme_bw()+labs(title = "Balance Histogram")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
+  theme_bw()+labs(title = "Balance Histogram")+
+  theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"),
+        panel.grid = element_line(color = "gray70"))+
+    scale_x_continuous(labels = comma)
 ```
 As we can see, $Balance$ is not normal, and has a right tail.
 
@@ -90,10 +98,10 @@ Credit %>%
   geom_smooth(method = "glm", level= 0.9, color= "black")+ylim(min(Balance), max(1500))+
   labs(title = "Balance GLM by Age & Ethnicity")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 
-
 Credit %>%
   ggplot(aes(y=Balance, x=Ethnicity,fill= Ethnicity))+
-  geom_boxplot(size= 0.7)+labs(x = "")
+  geom_boxplot(size= 0.7, alpha= 0.9)+labs(x = "")+
+  scale_y_continuous(labels = comma)+facet_wrap(~Gender)
 ```
 
 Prediction of Balance by race & gender
@@ -103,56 +111,76 @@ Credit %>%
   ggplot(aes(y=Balance,x= factor(Ethnicity),fill=factor(Gender) ))+
   geom_point(size= 0.7)+
   geom_boxplot(size= 0.7)+scale_fill_brewer(palette="Dark2")+
-  labs(x= "", title = "Balance by Gender & Ethnicity")+theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
+  labs(x= "", title = "Balance by Gender & Ethnicity")+theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))+
+  scale_y_continuous(labels = comma)+
+  scale_fill_brewer(palette = "Set1")
+
+```
+Prediction of Balance by Education
+
+```{r plot education,cache=FALSE, message= F}
+Credit %>%
+   mutate(Education_group = case_when(
+    Education <= 6 ~ "basic",
+    Education >= 7 & Education <= 11 ~ "mid",
+    Education == 12 ~ "high school",
+    Education >= 13 ~ "higher education"
+  )) %>% 
+  ggplot(aes(y=Balance,x= Gender,fill=Gender))+
+  geom_boxplot()+
+    labs(x= "", title = "Balance by Education & Gender")+theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))+
+  scale_y_continuous(labels = comma)+facet_wrap(~Education_group)+
+  scale_fill_brewer(palette = "Set1")
+
 ```
 
 Again, there is no clear effect.
 
 One can ask, can all of the weak predictors create a good one together?
 
-# Models
+## Models
 
-## Setting the Data 
+### Setting the Data 
 So let's start!
 
 We will ad some variables.
 
-1. High_deg= $T$ if got more than 12 years of education
-2. Age_2= $Age^2$ in order to allaw parabolic age effect
-3. Bride= interaction of gender ans marriage
+1. High_deg= Years of High Education. I assume high education affect different than high school education
+2. Age_2= $Age^2$ in order to allow parabolic Age effect. I know from past data that age can have more perambulate effect.
+3. Bride= interaction of gender ans marriage. Marriage  might change balance differently
 
 Also, we will set seed and sample train & test.
 
 ```{r mutate, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
 Credit<- Credit%>%
-  mutate(High_deg= Education>=13,
+  mutate(High_deg= pmax(Education - 12, 0),
   Age_2= Age^2,
   Bride= (Gender== 'Female')&(Married== 'Yes'))
 ```
 
 
 ```{r recipe data}
-credit_split<- initial_split(Credit, prop = 0.8)
+credit_split<-       initial_split(Credit, prop = 0.8)
 credit_train_split<- training(credit_split)
 credit_test_split<-  testing(credit_split)
 
-dolche_de_leche<- function(df) {
+fun_recipe<- function(df) {
   recipe(data=  df, Balance~.) %>% 
   update_role(Balance, new_role = "outcome") %>%
-  step_novel    (all_nominal(), -all_outcomes(),  new_level = "the_rest")%>% 
+  step_novel    (all_nominal(), -all_outcomes(),  new_level= "the_rest")%>% 
   step_unknown  (all_nominal(), -all_outcomes(),  new_level= "step_unknown" )%>%
   step_other    (all_nominal(), -all_outcomes(), other = 'step_other', threshold = 10)%>%
   step_nzv      (all_numeric(), -all_outcomes(),freq_cut = 99/1) %>% 
   step_normalize(all_numeric(), -all_outcomes())
   }
 
-dolche_credit_train<-credit_train_split%>% dolche_de_leche()%>% prep(credit_train_split)%>% bake(credit_train_split) 
-dolche_credit_test<- credit_train_split%>% dolche_de_leche()%>% prep(credit_train_split)%>% bake(credit_test_split)
+dolche_credit_train<-credit_train_split%>% fun_recipe()%>% prep(credit_train_split)%>% bake(credit_train_split) 
+dolche_credit_test<- credit_train_split%>% fun_recipe()%>% prep(credit_train_split)%>% bake(credit_test_split)
 ```
 
 Finally, we can predict with our models
 
-## Modeling Balance of 0
+### Modeling Balance of 0
 
 Here I create logistic prediction of Balance=0 in order to use in as another variable that we might consider using.
 
@@ -171,9 +199,9 @@ dolche_credit_train<- cbind(dolche_credit_train,log_data$Balance)
 dolche_credit_test<- cbind(dolche_credit_test,log_pred )
 ```
 
-## Linear
+### Linear
 
-### Classic LM
+#### Classic LM
 
 Assumption: knowing X matrix, Y distributed normal:
 
@@ -192,12 +220,13 @@ delta_lm %>% abs() %>% unlist() %>% mean(na.rm= T)
 cbind(lm_pred,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
-  geom_point()+geom_smooth()
+  geom_point(color= "orange")+geom_smooth(color= "darkolivegreen")+
+  scale_y_continuous(labels = comma)
 ```
 
 Now, what is our best predictors, if we filter our variables and prevent over fitting?
 
-### step wise method
+#### step wise method
 
 Adding each time variable according to AIC method.
 
@@ -218,7 +247,7 @@ lets see the regression vs the step wise. it is clear that the AIC method choose
 tab_model(lmfit,step_fit, show.ci= F,show.se = T,show.loglik= T)
 ```
 
-### lasso
+#### lasso
 
 Assumption
 
@@ -238,12 +267,11 @@ that lead to the minimum mean cross-validated error*
 
  <font size="2"> *[see also](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf) </font> 
 
-```{r LM Lasso, warning= F}
+```{r LM Lasso, warning= F, message=F}
 lasso_par <- linear_reg(mixture = 1,penalty = 0.01) %>% set_mode('regression') %>% 
   set_engine("glmnet")
 lasso_fit <- lm_par %>% fit(Balance ~ . , dolche_credit_train)
 lasso_pred<- predict(lasso_fit, new_data = dolche_credit_test)
-# abs(Credit$Balance[testid] - lmpred)
 
 delta_lasso<- lasso_pred-dolche_credit_test$Balance
 delta_lasso %>% abs() %>% unlist() %>% mean(na.rm= T)
@@ -251,10 +279,11 @@ delta_lasso %>% abs() %>% unlist() %>% mean(na.rm= T)
 cbind(lasso_pred,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
-  geom_point()+geom_smooth()
+  geom_point()+geom_smooth(color= "coral4")+
+  scale_y_continuous(labels = comma)
 ```
 
-##  Trees
+###  Trees
 
 The main algorithm in random forest, adaboost, etc is splitting the data each time into two samples, in the most effective way by reevaluating the error function.
 
@@ -266,7 +295,7 @@ while $M$ is the numbers of groups, $R_m$ is the specific group & $c_m$ is the p
 
 For a small tree,this is a very weak learner, but it can be used to create deeper learning. A complicated tree can lead to over-feeting.
 
-###  Random Forest
+####  Random Forest
 
 A mean of n-tree
 
@@ -283,7 +312,8 @@ delta_rf %>% abs() %>% unlist() %>% mean(na.rm= T)
 cbind(rf_pred,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
-  geom_point()+geom_smooth()
+  geom_point()+geom_smooth()+
+  scale_y_continuous(labels = comma)
 ```
 ___
 
@@ -308,7 +338,6 @@ vb_folds_rf <- vfold_cv(dolche_credit_train, strata = Balance, v= 5)
 ```
 
 ```{r run the tuning of randomForest}
-
 set.seed(234)
 rf_res <- tune_grid(
   rf_wf,
@@ -341,7 +370,7 @@ write_csv(best_tune_rf,"data/best_tune_rf.csv") #in any case, I save them to cut
 
 ![](myplot.png)
 
-```{r print fit randomForest}
+```{r print fit randomForest, message=F}
 best_tune_rf<- read_csv("data/best_tune_rf.csv")
 YG_tuned_boost <- rand_forest(mode = "regression", trees = 1500, min_n = best_tune_rf$min_n, mtry =best_tune_rf$mtry,
                            )%>%
@@ -356,11 +385,12 @@ delta_rf %>% abs() %>% unlist() %>% mean(na.rm= T)
 cbind(rf_pred,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
-  geom_point()+geom_smooth()
+  geom_point()+geom_smooth(color= "deeppink3")+
+  scale_y_continuous(labels = comma)
 ```
 ___
 
-###  XGBoost
+####  XGBoost
 
 Algorithm of gradient boosting trees
 
@@ -380,7 +410,8 @@ err_xgb %>% abs() %>% unlist() %>% mean(na.rm= T)
 cbind(pred_xgb,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
-  geom_point()+geom_smooth()
+  geom_point()+geom_smooth(color= "purple")+
+  scale_y_continuous(labels = comma)
 ```
 
 ___
@@ -415,7 +446,6 @@ xgb_res <- tune_grid(
 ```
 
 ```{r xgboost to tune res, warning=FALSE,cache=TRUE, message=FALSE}
-#abc<- 
 xgb_res %>%
   collect_metrics() %>%
   filter(.metric == "rmse") %>%
@@ -426,11 +456,13 @@ xgb_res %>%
   ggplot(aes(value, mean, color = parameter)) +
   geom_point(alpha = 0.8, show.legend = FALSE) +
   facet_wrap(~parameter, scales = "free_x") +
-  labs(x = NULL, y = "rmse")+theme_linedraw()
+  labs(x = NULL, y = "rmse")+theme_linedraw()+
+  scale_y_continuous(labels = comma)
+
 
 ggsave("photo_graph/myplot_xgb.png")
 
-show_best(xgb_res, metric = "rmse")# %>% select(-.estimator,-n,-.metric)
+show_best(xgb_res, metric = "rmse")
 
 best_tune_XGB <- select_best(xgb_res, metric = "rmse")
 write_csv(best_tune_XGB,"data/best_tune_XGB.csv") #in any case, I save them to cut reproducing
@@ -452,7 +484,8 @@ err_xgb %>% abs() %>% unlist() %>% mean(na.rm= T)
 cbind(pred_xgb,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
-  geom_point()+geom_smooth()
+  geom_point()+geom_smooth(color= "chocolate4")+
+  scale_y_continuous(labels = comma)
 ```
 ___
 
@@ -460,7 +493,7 @@ ___
 #norm_y<- 2*y/(max(y)+min(y))-1
 #
 #adb_s<-randomForest(formula= Balance ~ ., data = Credit[-testid , ],
-                    ntree= 1500, mtry= 14, na.action = na.omit, importance= T )
+#                    ntree= 1500, mtry= 14, na.action = na.omit, importance= T )
 
 #pred_abs <- predict(adb_s , Credit[testid , ], s = "lambda.min")
 #pred_abs<- head(as.vector(pred_abs),133)
@@ -468,13 +501,13 @@ ___
 #mean(abs(err_adb))
 ```
 
-##  Neural Network
+###  Neural Network
 
 Creating of network of nonlinear function and weights, that evaluate the prediction.
 
 This method is the hardest to present due to the complexitivity of the net.
 
-###  set seed
+####  set seed
 
 we set our net using 2 layers of relu and then a dropout
 
@@ -509,7 +542,7 @@ Using the net:
 
 ```{r apply Keras, echo=TRUE, results='hide', cache=TRUE}
 mod_Credit <- modnn %>% fit(
-  x, y, epochs = 1500, batch_size = 32,
+  x, y, epochs = 1600, batch_size = 32,
   validation_data = list(x_test, y_test))
 ```
 
@@ -534,7 +567,7 @@ err_nn %>% unlist() %>% mean(na.rm= T)
 ```
 
 
-## Sum all result
+### Sum all Result
 
 We used the same seed to test all methods, so now we can compare the error of each data.
 
@@ -572,7 +605,8 @@ my_pred %>%
     plot.title = element_text(size=12,hjust = 0.5,face = "bold"),
     plot.caption = element_text(size = 8,hjust= 0),
     axis.title = element_text(size = 8))+ ylab("Error")+
-  labs(title = "Error Violin",caption = script)
+  labs(title = "Error Violin",caption = script)+
+  scale_y_continuous(labels = comma)
 ```
 
 ```{r barplot}
@@ -582,9 +616,9 @@ my_err %>%
   geom_text(aes(label = round(Predict,2))  , vjust = +1.2, color= "White")
 ```
 
-# Discussion
+## Discussion
 
-For simplicity of explanation, the best model is the linear model. and indeed, most models did not get any major improvement. Hoever, the NN model gave such a better performance, that I would recommend using it as well.
+For simplicity of explanation, the best model is the linear model. and indeed, most models did not get any major improvement. However, the NN model gave such a better performance, that I would recommend using it as well.
 
 Amazingly, <b>the LM did nothing compare to the NN</b>, with only almost quarter of the linear's error.
 
