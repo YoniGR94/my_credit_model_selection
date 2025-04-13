@@ -21,8 +21,8 @@ tidyverse
 readr
 stringr
 forcats
+lubridate
 ISLR
-randomForest
 foreach
 iterators
 doParallel
@@ -35,8 +35,9 @@ RcmdrMisc
 effects
 Rcmdr
 MASS
+randomForest
 tensorflow
-keras
+keras3
 hrbrthemes
 viridisLite
 viridis

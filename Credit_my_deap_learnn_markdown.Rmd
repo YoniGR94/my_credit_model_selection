@@ -1,14 +1,16 @@
 ---
 title: "Different Techniches to Analyze Credit Balance"
 output: github_document
+author: "Yoni"
 always_allow_html: true
 ---
 
+# Intro
 How good can we predict Credit balance?
 
 What is the best way to check it?
 
-In order to race our models, we will use the Credit data from ILSR package.
+In order to check which method and models better, we will use the Credit data from ILSR package.
 
 About this data:
 
@@ -16,31 +18,38 @@ About this data:
 
 <font size="2">*[RDocumentation](https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Credit)</font>
 
-# prologue
-
 ## set Data
 
 First, let's set the Environment
 
-Libraries:
+### Main Libraries:
 
-```{r library, error=FALSE, message=FALSE, warning=FALSE}
+# tidymodels
+
+# tidyverse
+
+# Credit (the data)
+
+# model's packages- glmnet,randomForest, tensorflow, keras
+
+# visual packages- viridis,hrbrthemes, knitr
+
+```{r library, error=FALSE, message=FALSE, warning=FALSE, echo= F}
 library(easypackages)
 library(tidymodels)
 library(tidyverse)
 #collect data:
 library(ISLR)
 attach(Credit)
-#random Forest
-library(randomForest)
+# #random Forest
+# library(randomForest)
 library(doParallel)
 #other models
-libraries('glmnet','Rcmdr','MASS')
-#neural network
-libraries('tensorflow','keras')
+libraries('glmnet','Rcmdr','MASS','randomForest')
+#Neural Network
+libraries('tensorflow','keras3')
 #install_tensorflow() #install_keras() #install_minicomda
 #data tools:
-libraries('dplyr','tidyr')
 libraries('Matrix','scales')
 #visual
 libraries('hrbrthemes','viridis')
@@ -51,7 +60,7 @@ Now we will see the data's structure
 
 6 top rows of our table:
 
-```{r setup, include = FALSE}
+```{r setup, include = FALSE, echo= F}
 #knitr::opts_chunk$set(cache = TRUE)
 ```
 
@@ -87,19 +96,23 @@ Credit %>%
   geom_boxplot(size= 0.7)+labs(x = "")
 ```
 
-and what if we will predict by race & gender?
+Prediction of Balance by race & gender
 
-```{r plot age race,cache=FALSE}
+```{r plot age race,cache=FALSE, message= F}
 Credit %>%
   ggplot(aes(y=Balance,x= factor(Ethnicity),fill=factor(Gender) ))+
   geom_point(size= 0.7)+
   geom_boxplot(size= 0.7)+scale_fill_brewer(palette="Dark2")+
   labs(x= "", title = "Balance by Gender & Ethnicity")+theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 ```
+
 Again, there is no clear effect.
 
 One can ask, can all of the weak predictors create a good one together?
 
+# Models
+
+## Setting the Data 
 So let's start!
 
 We will ad some variables.
@@ -108,7 +121,7 @@ We will ad some variables.
 2. Age_2= $Age^2$ in order to allaw parabolic age effect
 3. Bride= interaction of gender ans marriage
 
-also, we will set seed and sample train & test.
+Also, we will set seed and sample train & test.
 
 ```{r mutate, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
 Credit<- Credit%>%
@@ -139,11 +152,9 @@ dolche_credit_test<- credit_train_split%>% dolche_de_leche()%>% prep(credit_trai
 
 Finally, we can predict with our models
 
-# Models
+## Modeling Balance of 0
 
- __draft: predict if Credit is 0.__
-
-This part is unfinished. here I create logistic prediction of Balance=0 in order to use in as another variable.
+Here I create logistic prediction of Balance=0 in order to use in as another variable that we might consider using.
 
 ```{r ad logist 0 prediction, eval=FALSE}
 log_data<- dolche_credit_train %>% 
@@ -165,6 +176,7 @@ dolche_credit_test<- cbind(dolche_credit_test,log_pred )
 ### Classic LM
 
 Assumption: knowing X matrix, Y distributed normal:
+
 $(Y|X) \sim N(BX,\sigma^2)$
 
 ```{r LM, warning= F}
@@ -321,9 +333,9 @@ rf_res %>% #???
 
 ggsave("photo_graph/myplot_rf.png")
 
-show_best(rf_res, "rmse")# %>% select(-.estimator,-n,-.metric)
+show_best(rf_res,metric =  "rmse")# %>% select(-.estimator,-n,-.metric)
 
-best_tune_rf <- select_best(rf_res, "rmse")
+best_tune_rf <- select_best(rf_res, metric = "rmse")
 write_csv(best_tune_rf,"data/best_tune_rf.csv") #in any case, I save them to cut reproducing
 ```
 
@@ -394,7 +406,6 @@ vb_folds_xgb <- vfold_cv(dolche_credit_train, strata = Balance, v= 5)
 ```
 
 ```{r run the tuning of}
-
 set.seed(234)
 xgb_res <- tune_grid(
   xgb_wf,
@@ -405,7 +416,7 @@ xgb_res <- tune_grid(
 
 ```{r xgboost to tune res, warning=FALSE,cache=TRUE, message=FALSE}
 #abc<- 
-xgb_res %>% #???
+xgb_res %>%
   collect_metrics() %>%
   filter(.metric == "rmse") %>%
   #select(mean, mtry:tree_depth) %>%
@@ -419,15 +430,15 @@ xgb_res %>% #???
 
 ggsave("photo_graph/myplot_xgb.png")
 
-show_best(xgb_res, "rmse")# %>% select(-.estimator,-n,-.metric)
+show_best(xgb_res, metric = "rmse")# %>% select(-.estimator,-n,-.metric)
 
-best_tune_XGB <- select_best(xgb_res, "rmse")
+best_tune_XGB <- select_best(xgb_res, metric = "rmse")
 write_csv(best_tune_XGB,"data/best_tune_XGB.csv") #in any case, I save them to cut reproducing
 ```
 
 ![](myplot.png)
 
-```{r print fit XGBoost}
+```{r print fit XGBoost, message=F}
 best_tune_XGB<- read_csv("data/best_tune_XGB.csv")
 YG_tuned_boost <- boost_tree(mode = "regression", trees = 1500, min_n = best_tune_XGB$min_n, mtry =best_tune_XGB$mtry,
                            tree_depth= best_tune_XGB$tree_depth )%>%
@@ -446,15 +457,15 @@ cbind(pred_xgb,dolche_credit_test$Balance) %>%
 ___
 
 ```{r adaboost old, warning= F,eval=FALSE}
-norm_y<- 2*y/(max(y)+min(y))-1
-
-adb_s<-randomForest(formula= Balance ~ ., data = Credit[-testid , ],
+#norm_y<- 2*y/(max(y)+min(y))-1
+#
+#adb_s<-randomForest(formula= Balance ~ ., data = Credit[-testid , ],
                     ntree= 1500, mtry= 14, na.action = na.omit, importance= T )
 
-pred_abs <- predict(adb_s , Credit[testid , ], s = "lambda.min")
-pred_abs<- head(as.vector(pred_abs),133)
-err_adb<- abs(y[testid] - pred_abs)
-mean(abs(err_adb))
+#pred_abs <- predict(adb_s , Credit[testid , ], s = "lambda.min")
+#pred_abs<- head(as.vector(pred_abs),133)
+#err_adb<- abs(y[testid] - pred_abs)
+#mean(abs(err_adb))
 ```
 
 ##  Neural Network
@@ -468,7 +479,7 @@ This method is the hardest to present due to the complexitivity of the net.
 we set our net using 2 layers of relu and then a dropout
 
 ```{r keras set, warning=FALSE}
-
+library(keras3)
 credit_nn_split<- initial_split(dolche_credit_train, prop = 0.8)
 credit_nn_train<- training(credit_nn_split)
 credit_nn_test<-  testing(credit_nn_split)
@@ -500,12 +511,11 @@ Using the net:
 mod_Credit <- modnn %>% fit(
   x, y, epochs = 1500, batch_size = 32,
   validation_data = list(x_test, y_test))
-
 ```
 
 ### Keras result
 
-```{r Keras result, cache=T}
+```{r Keras result, cache=T, message=F}
 mod_Credit
 
 plot(mod_Credit)+theme_gray()+
@@ -563,7 +573,6 @@ my_pred %>%
     plot.caption = element_text(size = 8,hjust= 0),
     axis.title = element_text(size = 8))+ ylab("Error")+
   labs(title = "Error Violin",caption = script)
-
 ```
 
 ```{r barplot}
@@ -575,7 +584,7 @@ my_err %>%
 
 # Discussion
 
-If the winner of the error in prediction were not that clear, our $H_0$ would will be the linear model, since it's prediction is the easiest to understand and present.
+For simplicity of explanation, the best model is the linear model. and indeed, most models did not get any major improvement. Hoever, the NN model gave such a better performance, that I would recommend using it as well.
 
 Amazingly, <b>the LM did nothing compare to the NN</b>, with only almost quarter of the linear's error.
 
