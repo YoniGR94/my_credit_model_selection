@@ -1,5 +1,5 @@
 ---
-title: "Different Techniches to Analyze Credit Balance"
+title: "Different Technics to Analyze Credit Balance"
 output: github_document
 author: "Yoni"
 
@@ -61,7 +61,7 @@ libraries('hrbrthemes','viridis')
 libraries('knitr','kableExtra','sjPlot')
 ```
 
-Now we will see the data's structure
+Firs, I will see the data's structure
 
 6 top rows of our table:
 
@@ -87,16 +87,27 @@ Credit %>%
         panel.grid = element_line(color = "gray70"))+
     scale_x_continuous(labels = comma)
 ```
-As we can see, $Balance$ is not normal, and has a right tail.
+As you can see, $Balance$ is not normal, and has a right tail.
 
 Trying to predict the Balance, one cal ask about race and/or gender bias. Does this factor alone predict the result? and age?
 
 ```{r visual trend, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
+library(ggridges)
+
 Credit %>%
-  ggplot(aes(y=Balance, x=Age,fill= factor(Ethnicity) ))+
-  geom_point(size= 0.7)+
-  geom_smooth(method = "glm", level= 0.9, color= "black")+ylim(min(Balance), max(1500))+
-  labs(title = "Balance GLM by Age & Ethnicity")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
+  mutate(age_group = cut(
+    Age,
+    breaks = seq(20, 100, by = 10),
+    right = FALSE,
+    include.lowest = TRUE,
+    ordered_result = TRUE
+  )) %>% 
+  ggplot(aes(y=age_group, x=Balance,fill= age_group ))+
+  scale_x_continuous(labels = comma)+
+  geom_density_ridges(scale = 2) +
+  theme_ridges() +
+  theme(legend.position = "none")+
+  labs(title = "Balance GLM by Age Group")+ theme(plot.title = element_text(size=12,hjust = 0.5,face = "bold"))
 
 Credit %>%
   ggplot(aes(y=Balance, x=Ethnicity,fill= Ethnicity))+
@@ -141,15 +152,14 @@ One can ask, can all of the weak predictors create a good one together?
 ## Models
 
 ### Setting the Data 
-So let's start!
 
-We will ad some variables.
+I will ad some variables.
 
 1. High_deg= Years of High Education. I assume high education affect different than high school education
 2. Age_2= $Age^2$ in order to allow parabolic Age effect. I know from past data that age can have more perambulate effect.
 3. Bride= interaction of gender ans marriage. Marriage  might change balance differently
 
-Also, we will set seed and sample train & test.
+Also, I will set seed and sample train & test.
 
 ```{r mutate, error=FALSE, message=FALSE, warning=FALSE,cache=FALSE}
 Credit<- Credit%>%
@@ -178,11 +188,11 @@ dolche_credit_train<-credit_train_split%>% fun_recipe()%>% prep(credit_train_spl
 dolche_credit_test<- credit_train_split%>% fun_recipe()%>% prep(credit_train_split)%>% bake(credit_test_split)
 ```
 
-Finally, we can predict with our models
+Finally, I can predict with our models
 
 ### Modeling Balance of 0
 
-Here I create logistic prediction of Balance=0 in order to use in as another variable that we might consider using.
+Here I create logistic prediction of Balance=0 in order to use in as another variable that I might consider using.
 
 ```{r ad logist 0 prediction, eval=FALSE}
 log_data<- dolche_credit_train %>% 
@@ -224,7 +234,7 @@ cbind(lm_pred,dolche_credit_test$Balance) %>%
   scale_y_continuous(labels = comma)
 ```
 
-Now, what is our best predictors, if we filter our variables and prevent over fitting?
+Now, what is our best predictors, if I filter our variables and prevent over fitting?
 
 #### step wise method
 
@@ -239,9 +249,10 @@ step_pred <- predict(step_fit , credit_test_split)
 err_step<- abs(credit_test_split$Balance - step_pred)
 mean(abs(err_step))
 ```
-the chosen model is $$Balance ~ Rating + Income + Student + Limit + Cards$$ and we get sd of 80.94
 
-lets see the regression vs the step wise. it is clear that the AIC method choose only the variables with P-value < 5 %
+The chosen model is $$Balance ~ Rating + Income + Student + Limit + Cards$$ and I get sd of 80.94
+
+Lets see the regression vs the step wise. it is clear that the AIC method choose only the variables with P-value < 5 %
 
 ```{r sum of reg}
 tab_model(lmfit,step_fit, show.ci= F,show.se = T,show.loglik= T)
@@ -253,7 +264,7 @@ Assumption
 
 $(Y|X) \sim N(BX,\sigma^2)$ , like LM.
 
-But this time we use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
+But this time I use shrinkage method in order to reduce variance & over fitting. so our minimizing function define as
 
 $RSS+ \lambda {\Sigma}_{j=1}^p |\beta_j|$
 
@@ -261,7 +272,7 @@ when
 $p=length( \beta)$ and $\lambda$
 is a hyper parameter.
 
-This time, we need to set our hipper parameter, 
+This time, I need to set our hipper parameter, 
 $\lambda$
 that lead to the minimum mean cross-validated error*
 
@@ -406,7 +417,6 @@ pred_xgb<-  predict(xgb_fit, new_data = dolche_credit_test)
 err_xgb<- pred_xgb-dolche_credit_test$Balance
 err_xgb %>% abs() %>% unlist() %>% mean(na.rm= T)
 
-
 cbind(pred_xgb,dolche_credit_test$Balance) %>%
   rename(pred= 1, true= 2) %>% 
   ggplot(aes(y=pred, x= true))+
@@ -459,7 +469,6 @@ xgb_res %>%
   labs(x = NULL, y = "rmse")+theme_linedraw()+
   scale_y_continuous(labels = comma)
 
-
 ggsave("photo_graph/myplot_xgb.png")
 
 show_best(xgb_res, metric = "rmse")
@@ -509,7 +518,7 @@ This method is the hardest to present due to the complexitivity of the net.
 
 ####  set seed
 
-we set our net using 2 layers of relu and then a dropout
+I set our net using 2 layers of relu and then a dropout
 
 ```{r keras set, warning=FALSE}
 library(keras3)
@@ -548,7 +557,7 @@ mod_Credit <- modnn %>% fit(
 
 ### Keras result
 
-```{r Keras result, cache=T, message=F}
+```{r Keras result, cache=T, message=F, warning=F, error=F}
 mod_Credit
 
 plot(mod_Credit)+theme_gray()+
@@ -569,9 +578,9 @@ err_nn %>% unlist() %>% mean(na.rm= T)
 
 ### Sum all Result
 
-We used the same seed to test all methods, so now we can compare the error of each data.
+I use the same seed to test all methods, so now I can compare the error of each data.
 
-* Each time this scipt were running, we got different result, due to randomness of $testid$ , and of the deep learning models
+* Each time this script were running, I got different result, due to randomness of $testid$ , and of the deep learning models
 
 ```{r sum pred, echo=TRUE, cache=T}
 modl_nam<-c("Balance", "Linear", "Lasso", "Random_forrest","xgboost","Neural_network")

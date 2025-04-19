@@ -6,7 +6,7 @@ editor_options:
 ---
 
 ---
-title: "Different Techniches to Analyze Credit Balance"
+title: "Different Technics to Analyze Credit Balance"
 output: github_document
 always_allow_html: true
 ---
