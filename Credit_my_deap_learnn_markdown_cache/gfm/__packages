@@ -41,8 +41,8 @@ keras3
 hrbrthemes
 viridisLite
 viridis
+ggridges
 knitr
 kableExtra
 sjPlot
-ggridges
 xgboost
